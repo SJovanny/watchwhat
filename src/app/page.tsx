@@ -1,103 +1,218 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Sparkles, TrendingUp, Star, ChevronRight } from 'lucide-react';
+import SearchBar from '@/components/SearchBar';
+import SerieCard from '@/components/SerieCard';
+import { Serie } from '@/types';
+import { tmdbService, generateRecommendations } from '@/lib/tmdb';
+import { storageService } from '@/lib/storage';
+import { useNotify } from '@/components/NotificationProvider';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [popularSeries, setPopularSeries] = useState<Serie[]>([]);
+  const [topRatedSeries, setTopRatedSeries] = useState<Serie[]>([]);
+  const [recommendations, setRecommendations] = useState<Serie[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const notify = useNotify();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Vérifier si l'onboarding est nécessaire
+        if (!storageService.isOnboardingComplete()) {
+          setShowOnboarding(true);
+        }
+
+        // Charger les données de base
+        const [popular, topRated] = await Promise.all([
+          tmdbService.getPopularSeries(),
+          tmdbService.getTopRatedSeries()
+        ]);
+
+        setPopularSeries(popular.results.slice(0, 12));
+        setTopRatedSeries(topRated.results.slice(0, 12));
+
+        // Générer des recommandations si l'utilisateur a des préférences
+        const preferences = storageService.getUserPreferences();
+        const watchedSeries = storageService.getWatchedSeries();
+
+        if (preferences.favoriteGenres.length > 0 || watchedSeries.length > 0) {
+          const recs = await generateRecommendations({
+            favoriteGenres: preferences.favoriteGenres,
+            favoriteActors: preferences.favoriteActors,
+            watchedSeries: watchedSeries.map(w => w.serie.id),
+            minRating: preferences.minRating
+          });
+          setRecommendations(recs);
+        }
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleSerieSelect = useCallback((serie: Serie) => {
+    // Naviguer vers la page de détail de la série
+    window.location.href = `/serie/${serie.id}`;
+  }, []);
+
+  const handleAddToWatched = useCallback((serie: Serie) => {
+    storageService.addWatchedSerie(serie);
+    notify.success(
+      'Série ajoutée !',
+      `"${serie.name}" a été ajoutée à votre liste des séries vues`,
+      {
+        label: 'Voir mes favoris',
+        onClick: () => window.location.href = '/favorites'
+      }
+    );
+  }, [notify]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              Découvrez votre prochaine série
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100 mb-8">
+              Des recommandations personnalisées basées sur vos goûts
+            </p>
+            
+            {/* Barre de recherche */}
+            <div className="max-w-2xl mx-auto">
+              <SearchBar 
+                onSerieSelect={handleSerieSelect}
+                placeholder="Rechercher une série..."
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Recommandations personnalisées */}
+        {recommendations.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <Sparkles className="h-6 w-6 text-yellow-500" />
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Recommandé pour vous
+                </h2>
+              </div>
+              <button className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline">
+                <span>Voir tout</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {recommendations.slice(0, 12).map((serie) => (
+                <SerieCard
+                  key={serie.id}
+                  serie={serie}
+                  onSerieClick={handleSerieSelect}
+                  onAddToWatched={handleAddToWatched}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Séries populaires */}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-6 w-6 text-orange-500" />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Tendances
+              </h2>
+            </div>
+            <button className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline">
+              <span>Voir tout</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {popularSeries.map((serie) => (
+              <SerieCard
+                key={serie.id}
+                serie={serie}
+                onSerieClick={handleSerieSelect}
+                onAddToWatched={handleAddToWatched}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Mieux notées */}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-2">
+              <Star className="h-6 w-6 text-yellow-500" fill="currentColor" />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Les mieux notées
+              </h2>
+            </div>
+            <button className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline">
+              <span>Voir tout</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {topRatedSeries.map((serie) => (
+              <SerieCard
+                key={serie.id}
+                serie={serie}
+                onSerieClick={handleSerieSelect}
+                onAddToWatched={handleAddToWatched}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Call to action pour les nouveaux utilisateurs */}
+        {showOnboarding && (
+          <section className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-8 text-center">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Personnalisez vos recommandations
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Configurez vos préférences pour recevoir des suggestions encore plus précises
+            </p>
+            <button 
+              onClick={() => window.location.href = '/onboarding'}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Commencer la configuration
+            </button>
+          </section>
+        )}
+      </div>
     </div>
   );
 }
