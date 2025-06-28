@@ -13,6 +13,23 @@ export interface Serie {
   origin_country: string[];
   original_language: string;
   popularity: number;
+  media_type: 'tv';
+}
+
+export interface Movie {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date: string;
+  vote_average: number;
+  vote_count: number;
+  genre_ids: number[];
+  original_language: string;
+  popularity: number;
+  video: boolean;
+  media_type: 'movie';
 }
 
 export interface SerieDetails extends Serie {
@@ -51,6 +68,7 @@ export interface Person {
   profile_path: string | null;
   character?: string;
   job?: string;
+  media_type: 'person';
 }
 
 export interface Episode {
@@ -143,11 +161,15 @@ export interface Credits {
 
 // Types pour l'historique de visionnage
 export interface WatchedSerie {
-  serie: Serie;
+  id?: string;
+  userId: string;
+  serieId: number;
+  serieData: Serie;
   watchedAt: Date;
   rating?: number;
   review?: string;
-  seasonsWatched?: number[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Types pour les recommandations
@@ -172,4 +194,61 @@ export interface TMDBGenre {
 
 export interface TMDBSearchResponse extends TMDBResponse<Serie> {}
 
+export type SearchResult = Movie | Serie | Person;
+
+export interface TMDBMultiSearchResponse extends TMDBResponse<SearchResult> {}
+
 export interface TMDBDiscoverResponse extends TMDBResponse<Serie> {}
+
+export interface Review {
+  author: string;
+  author_details: {
+    name: string;
+    username: string;
+    avatar_path: string | null;
+    rating: number | null;
+  };
+  content: string;
+  created_at: string;
+  id: string;
+  updated_at: string;
+  url: string;
+}
+
+export interface TMDBReviewsResponse extends TMDBResponse<Review> {}
+
+// Types pour les données utilisateur
+export interface UserPreferences {
+  id?: string;
+  userId: string;
+  preferredLanguages: string[];
+  favoriteGenres: number[];
+  favoriteSeries: Serie[];
+  notificationsEnabled: boolean;
+  autoAddToWatchlist: boolean;
+  showAdultContent: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface WatchlistItem {
+  id?: string;
+  userId: string;
+  serieId: number;
+  serieData: Serie;
+  addedAt: Date;
+  priority?: 'low' | 'medium' | 'high';
+  notes?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface UserRating {
+  id?: string;
+  userId: string;
+  serieId: number;
+  rating: number;
+  review?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

@@ -158,17 +158,18 @@ export default function ProfilePage() {
           
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white mb-2">Note minimale</h3>
+              <h3 className="font-medium text-gray-900 dark:text-white mb-2">Notifications</h3>
               <div className="flex items-center space-x-2">
-                <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />
-                <span className="text-gray-600 dark:text-gray-400">{preferences.minRating}/10</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  {preferences.notificationsEnabled ? 'Activées' : 'Désactivées'}
+                </span>
               </div>
             </div>
 
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white mb-2">Langues préférées</h3>
               <div className="flex flex-wrap gap-2">
-                {preferences.preferredLanguages.map((lang) => (
+                {preferences.preferredLanguages.map((lang: string) => (
                   <span key={lang} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded">
                     {lang.toUpperCase()}
                   </span>
@@ -180,7 +181,7 @@ export default function ProfilePage() {
               <h3 className="font-medium text-gray-900 dark:text-white mb-2">Genres favoris</h3>
               <div className="flex flex-wrap gap-2">
                 {preferences.favoriteGenres.length > 0 ? (
-                  preferences.favoriteGenres.map((genreId) => (
+                  preferences.favoriteGenres.map((genreId: number) => (
                     <span key={genreId} className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm rounded-full">
                       Genre #{genreId}
                     </span>

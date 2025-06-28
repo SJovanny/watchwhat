@@ -63,7 +63,7 @@ export default function FavoritesPage() {
   const clearAllWatched = () => {
     if (confirm('Êtes-vous sûr de vouloir vider votre historique de visionnage ?')) {
       watchedSeries.forEach(watched => {
-        storageService.removeWatchedSerie(watched.serie.id);
+        storageService.removeWatchedSerie(watched.serieData.id);
       });
       loadData();
     }
@@ -135,7 +135,6 @@ export default function FavoritesPage() {
                       <SerieCard
                         serie={serie}
                         onSerieClick={handleSerieSelect}
-                        onAddToWatched={handleAddToWatched}
                       />
                       <button
                         onClick={() => handleRemoveFavorite(serie.id)}
@@ -192,10 +191,10 @@ export default function FavoritesPage() {
                   {watchedSeries
                     .sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime())
                     .map((watched) => (
-                      <div key={watched.serie.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 flex items-center space-x-4">
+                      <div key={watched.serieData.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 flex items-center space-x-4">
                         <img
-                          src={`https://image.tmdb.org/t/p/w92${watched.serie.poster_path}`}
-                          alt={watched.serie.name}
+                          src={`https://image.tmdb.org/t/p/w92${watched.serieData.poster_path}`}
+                          alt={watched.serieData.name}
                           className="w-16 h-24 object-cover rounded"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/placeholder-poster.svg';
@@ -205,9 +204,9 @@ export default function FavoritesPage() {
                         <div className="flex-1">
                           <h3 
                             className="font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                            onClick={() => handleSerieSelect(watched.serie)}
+                            onClick={() => handleSerieSelect(watched.serieData)}
                           >
-                            {watched.serie.name}
+                            {watched.serieData.name}
                           </h3>
                           <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
                             <div className="flex items-center space-x-1">
@@ -229,7 +228,7 @@ export default function FavoritesPage() {
                         </div>
                         
                         <button
-                          onClick={() => handleRemoveWatched(watched.serie.id)}
+                          onClick={() => handleRemoveWatched(watched.serieData.id)}
                           className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
                           title="Retirer de l'historique"
                         >

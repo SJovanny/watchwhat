@@ -5,7 +5,7 @@ import { Search } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import FilterBar from '@/components/FilterBar';
 import SerieCard from '@/components/SerieCard';
-import { Serie } from '@/types';
+import { Serie, SearchResult } from '@/types';
 import { tmdbService } from '@/lib/tmdb';
 import { storageService } from '@/lib/storage';
 import { useNotify } from '@/components/NotificationProvider';
@@ -67,6 +67,27 @@ export default function DiscoverPage() {
     }
   };
 
+  const handleSearchSubmit = useCallback((query: string) => {
+    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+  }, []);
+
+  const handleResultSelect = useCallback((result: SearchResult) => {
+    if (result.media_type === 'tv') {
+      // Naviguer vers la page de détail de la série
+      window.location.href = `/serie/${result.id}`;
+    } else if (result.media_type === 'movie') {
+      // Pour les films, on pourrait créer une page dédiée ou rediriger vers TMDB
+      notify.info(
+        'Fonctionnalité bientôt disponible',
+        'Les pages de détails pour les films seront bientôt disponibles !',
+        {
+          label: 'Voir sur TMDB',
+          onClick: () => window.open(`https://www.themoviedb.org/movie/${result.id}`, '_blank')
+        }
+      );
+    }
+  }, [notify]);
+
   const handleSerieSelect = useCallback((serie: Serie) => {
     window.location.href = `/serie/${serie.id}`;
   }, []);
@@ -106,8 +127,10 @@ export default function DiscoverPage() {
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="flex-1">
             <SearchBar 
-              onSerieSelect={handleSerieSelect}
-              placeholder="Rechercher une série..."
+              onResultSelect={handleResultSelect}
+              onSearchSubmit={handleSearchSubmit}
+              placeholder="Rechercher un film, une série..."
+              maxResults={8}
             />
           </div>
           <div>
@@ -123,7 +146,6 @@ export default function DiscoverPage() {
                 key={serie.id}
                 serie={serie}
                 onSerieClick={handleSerieSelect}
-                onAddToWatched={handleAddToWatched}
               />
             ))}
           </div>

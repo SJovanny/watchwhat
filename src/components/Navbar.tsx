@@ -1,8 +1,22 @@
-import React from 'react';
+'use client'
+
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, Heart, Home, User, Settings, TrendingUp } from 'lucide-react';
+import { Search, Heart, Home, User, Settings, TrendingUp, LogIn, LogOut, Menu, X } from 'lucide-react';
+import { useAuth } from './AuthProvider';
 
 export default function Navbar() {
+  const { user, loading, signIn, signOut } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleAuthAction = async () => {
+    if (user) {
+      await signOut();
+    } else {
+      await signIn();
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,24 +50,80 @@ export default function Navbar() {
             </Link>
             
             <Link 
-              href="/favorites" 
+              href="/search" 
               className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              <Heart size={20} />
-              <span>Favoris</span>
+              <Search size={20} />
+              <span>Recherche</span>
             </Link>
             
-            <Link 
-              href="/profile" 
-              className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              <User size={20} />
-              <span>Profil</span>
-            </Link>
+            {user && (
+              <Link 
+                href="/favorites" 
+                className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Heart size={20} />
+                <span>Favoris</span>
+              </Link>
+            )}
+            
+            {user && (
+              <Link 
+                href="/profile" 
+                className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <User size={20} />
+                <span>Profil</span>
+              </Link>
+            )}
           </div>
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
+            {/* Profil utilisateur ou bouton de connexion */}
+            {!loading && (
+              <div className="flex items-center space-x-2">
+                {user ? (
+                  <div className="flex items-center space-x-3">
+                    {/* Avatar utilisateur */}
+                    <div className="flex items-center space-x-2">
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name || 'Avatar'}
+                          className="w-8 h-8 rounded-full border-2 border-blue-500"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {user.name || 'Utilisateur'}
+                      </span>
+                    </div>
+                    
+                    {/* Bouton de déconnexion */}
+                    <button
+                      onClick={handleAuthAction}
+                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                      title="Se déconnecter"
+                    >
+                      <LogOut size={20} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleAuthAction}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <LogIn size={16} />
+                    <span>Se connecter</span>
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Bouton des paramètres */}
             <Link
               href="/settings"
@@ -61,11 +131,66 @@ export default function Navbar() {
             >
               <Settings size={20} />
             </Link>
+
+            {/* Menu mobile */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            >
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
+
+        {/* Menu mobile étendu */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex flex-col space-y-2">
+              <Link 
+                href="/" 
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Home size={20} />
+                <span>Accueil</span>
+              </Link>
+              
+              <Link 
+                href="/discover" 
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Search size={20} />
+                <span>Découvrir</span>
+              </Link>
+              
+              {user && (
+                <>
+                  <Link 
+                    href="/favorites" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <Heart size={20} />
+                    <span>Favoris</span>
+                  </Link>
+                  
+                  <Link 
+                    href="/profile" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <User size={20} />
+                    <span>Profil</span>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Navigation Mobile */}
+      {/* Navigation Mobile Bottom (conservée pour la compatibilité) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-4 py-2">
         <div className="flex items-center justify-around">
           <Link 
@@ -84,21 +209,33 @@ export default function Navbar() {
             <span className="text-xs">Découvrir</span>
           </Link>
           
-          <Link 
-            href="/favorites" 
-            className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
-          >
-            <Heart size={20} />
-            <span className="text-xs">Favoris</span>
-          </Link>
-          
-          <Link 
-            href="/profile" 
-            className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
-          >
-            <User size={20} />
-            <span className="text-xs">Profil</span>
-          </Link>
+          {user ? (
+            <>
+              <Link 
+                href="/favorites" 
+                className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+              >
+                <Heart size={20} />
+                <span className="text-xs">Favoris</span>
+              </Link>
+              
+              <Link 
+                href="/profile" 
+                className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+              >
+                <User size={20} />
+                <span className="text-xs">Profil</span>
+              </Link>
+            </>
+          ) : (
+            <button
+              onClick={handleAuthAction}
+              className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+            >
+              <LogIn size={20} />
+              <span className="text-xs">Connexion</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>

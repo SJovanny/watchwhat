@@ -7,7 +7,9 @@ import {
   TMDBGenre,
   Person,
   VideoResponse,
-  Credits
+  Credits,
+  TMDBReviewsResponse,
+  TMDBMultiSearchResponse
 } from '@/types';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
@@ -16,8 +18,10 @@ const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 // Configuration de l'API TMDB
 const tmdbApi = axios.create({
   baseURL: TMDB_BASE_URL,
+  headers: {
+    Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN}`
+  },
   params: {
-    api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
     language: 'fr-FR'
   }
 });
@@ -35,9 +39,9 @@ export const getBackdropUrl = (path: string | null, size: 'w300' | 'w780' | 'w12
 
 // API Functions
 export const tmdbService = {
-  // Rechercher des séries
-  async searchSeries(query: string, page: number = 1): Promise<TMDBSearchResponse> {
-    const response = await tmdbApi.get('/search/tv', {
+  // Rechercher des séries, films, personnes
+  async searchMulti(query: string, page: number = 1): Promise<TMDBMultiSearchResponse> {
+    const response = await tmdbApi.get('/search/multi', {
       params: { query, page }
     });
     return response.data;
@@ -83,6 +87,22 @@ export const tmdbService = {
   // Obtenir les crédits d'une série (cast et crew)
   async getSerieCredits(serieId: number): Promise<Credits> {
     const response = await tmdbApi.get(`/tv/${serieId}/credits`);
+    return response.data;
+  },
+
+  // Obtenir les avis sur une série
+  async getSerieReviews(serieId: number, page: number = 1): Promise<TMDBReviewsResponse> {
+    const response = await tmdbApi.get(`/tv/${serieId}/reviews`, {
+      params: { page }
+    });
+    return response.data;
+  },
+
+  // Obtenir les séries tendance
+  async getTrendingSeries(timeWindow: 'day' | 'week' = 'day', page: number = 1): Promise<TMDBSearchResponse> {
+    const response = await tmdbApi.get(`/trending/tv/${timeWindow}`, {
+      params: { page }
+    });
     return response.data;
   },
 
@@ -152,7 +172,43 @@ export const tmdbService = {
   async getPersonTVCredits(personId: number): Promise<{ cast: Serie[] }> {
     const response = await tmdbApi.get(`/person/${personId}/tv_credits`);
     return response.data;
-  }
+  },
+
+  // Rechercher des séries
+  async searchSeries(query: string, page: number = 1): Promise<TMDBSearchResponse> {
+    const response = await tmdbApi.get('/search/tv', {
+      params: { query, page }
+    });
+    return response.data;
+  },
+
+  // Rechercher des films
+  async searchMovies(query: string, page: number = 1): Promise<any> {
+    const response = await tmdbApi.get('/search/movie', {
+      params: { query, page }
+    });
+    return response.data;
+  },
+
+  // Rechercher des séries avec support multilingue
+  async searchSeriesMultilingual(query: string, page: number = 1): Promise<TMDBSearchResponse> {
+    const response = await tmdbApi.get('/search/tv', {
+      params: { 
+        query, 
+        page,
+        include_adult: false
+      }
+    });
+    return response.data;
+  },
+
+  // Rechercher du contenu multiple (films, séries, personnes)
+  async searchMultiContent(query: string, page: number = 1): Promise<TMDBMultiSearchResponse> {
+    const response = await tmdbApi.get('/search/multi', {
+      params: { query, page }
+    });
+    return response.data;
+  },
 };
 
 // Fonction pour générer des recommandations personnalisées

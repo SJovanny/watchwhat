@@ -10,14 +10,13 @@ const STORAGE_KEYS = {
 
 // Préférences par défaut
 const DEFAULT_PREFERENCES: UserPreferences = {
+  userId: '',
   favoriteGenres: [],
-  favoriteActors: [],
   favoriteSeries: [],
-  dislikedGenres: [],
   preferredLanguages: ['fr', 'en'],
-  minRating: 6.0,
-  maxYear: new Date().getFullYear(),
-  minYear: 1990
+  notificationsEnabled: true,
+  autoAddToWatchlist: false,
+  showAdultContent: false
 };
 
 // Service de stockage local
@@ -50,14 +49,16 @@ export const storageService = {
     try {
       const watchedSeries = this.getWatchedSeries();
       const watchedSerie: WatchedSerie = {
-        serie,
+        userId: '',
+        serieId: serie.id,
+        serieData: serie,
         watchedAt: new Date(),
         rating,
         review
       };
 
       // Vérifier si la série n'est pas déjà dans la liste
-      const existingIndex = watchedSeries.findIndex(w => w.serie.id === serie.id);
+      const existingIndex = watchedSeries.findIndex(w => w.serieData.id === serie.id);
       if (existingIndex >= 0) {
         watchedSeries[existingIndex] = watchedSerie;
       } else {
@@ -92,7 +93,7 @@ export const storageService = {
   removeWatchedSerie(serieId: number): void {
     try {
       const watchedSeries = this.getWatchedSeries();
-      const filtered = watchedSeries.filter(w => w.serie.id !== serieId);
+      const filtered = watchedSeries.filter(w => w.serieData.id !== serieId);
       localStorage.setItem(STORAGE_KEYS.WATCHED_SERIES, JSON.stringify(filtered));
     } catch (error) {
       console.error('Erreur lors de la suppression de la série vue:', error);
@@ -109,7 +110,7 @@ export const storageService = {
         
         // Aussi l'ajouter aux préférences
         const preferences = this.getUserPreferences();
-        if (!preferences.favoriteSeries.find(s => s.id === serie.id)) {
+        if (!preferences.favoriteSeries.find((s: Serie) => s.id === serie.id)) {
           preferences.favoriteSeries.push(serie);
           this.saveUserPreferences(preferences);
         }
@@ -139,7 +140,7 @@ export const storageService = {
 
       // Aussi la supprimer des préférences
       const preferences = this.getUserPreferences();
-      preferences.favoriteSeries = preferences.favoriteSeries.filter(s => s.id !== serieId);
+      preferences.favoriteSeries = preferences.favoriteSeries.filter((s: Serie) => s.id !== serieId);
       this.saveUserPreferences(preferences);
     } catch (error) {
       console.error('Erreur lors de la suppression des favoris:', error);
