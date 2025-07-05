@@ -5,6 +5,8 @@ import {
   TMDBSearchResponse, 
   TMDBDiscoverResponse, 
   TMDBGenre,
+  TMDBMovieResponse,
+  Movie,
   Person,
   VideoResponse,
   Credits,
@@ -47,24 +49,55 @@ export const tmdbService = {
     return response.data;
   },
 
-  // Découvrir des séries avec des filtres
-  async discoverSeries(params: {
+  // TRENDING ENDPOINTS (ALL CONTENT)
+  // Obtenir le contenu tendance (films, séries, personnes)
+  async getTrendingAll(timeWindow: 'day' | 'week' = 'day', page: number = 1): Promise<TMDBMultiSearchResponse> {
+    const response = await tmdbApi.get(`/trending/all/${timeWindow}`, {
+      params: { page }
+    });
+    
+    // Trier les résultats par popularité décroissante pour assurer l'ordre
+    if (response.data && response.data.results) {
+      response.data.results.sort((a: any, b: any) => b.popularity - a.popularity);
+    }
+    
+    return response.data;
+  },
+
+  // Découvrir du contenu avec des filtres (films et séries)
+  async discoverAll(params: {
     page?: number;
     with_genres?: string;
     without_genres?: string;
-    first_air_date_year?: number;
+    year?: number;
     vote_average_gte?: number;
     vote_average_lte?: number;
     with_original_language?: string;
     sort_by?: string;
-  } = {}): Promise<TMDBDiscoverResponse> {
-    const response = await tmdbApi.get('/discover/tv', {
+    media_type?: 'movie' | 'tv';
+  } = {}): Promise<any> {
+    const { media_type = 'movie', ...otherParams } = params;
+    
+    const endpoint = media_type === 'tv' ? '/discover/tv' : '/discover/movie';
+    const dateParam = media_type === 'tv' ? 'first_air_date_year' : 'year';
+    
+    const response = await tmdbApi.get(endpoint, {
       params: {
         page: 1,
         sort_by: 'popularity.desc',
-        ...params
+        [dateParam]: params.year,
+        ...otherParams
       }
     });
+    
+    // Ajouter le media_type aux résultats pour la cohérence
+    if (response.data && response.data.results) {
+      response.data.results = response.data.results.map((item: any) => ({
+        ...item,
+        media_type
+      }));
+    }
+    
     return response.data;
   },
 
@@ -100,9 +133,16 @@ export const tmdbService = {
 
   // Obtenir les séries tendance
   async getTrendingSeries(timeWindow: 'day' | 'week' = 'day', page: number = 1): Promise<TMDBSearchResponse> {
+    // Utilisation directe de l'endpoint trending de TMDB pour des résultats plus précis
     const response = await tmdbApi.get(`/trending/tv/${timeWindow}`, {
       params: { page }
     });
+    
+    // Trier les résultats par popularité décroissante pour assurer l'ordre
+    if (response.data && response.data.results) {
+      response.data.results.sort((a: any, b: any) => b.popularity - a.popularity);
+    }
+    
     return response.data;
   },
 
@@ -117,7 +157,10 @@ export const tmdbService = {
   // Obtenir les séries les mieux notées
   async getTopRatedSeries(page: number = 1): Promise<TMDBSearchResponse> {
     const response = await tmdbApi.get('/tv/top_rated', {
-      params: { page }
+      params: { 
+        page,
+        "vote_count.gte": 500
+      }
     });
     return response.data;
   },
@@ -141,6 +184,12 @@ export const tmdbService = {
   // Obtenir les genres
   async getGenres(): Promise<TMDBGenre[]> {
     const response = await tmdbApi.get('/genre/tv/list');
+    return response.data.genres;
+  },
+
+  // Obtenir les genres de films
+  async getMovieGenres(): Promise<TMDBGenre[]> {
+    const response = await tmdbApi.get('/genre/movie/list');
     return response.data.genres;
   },
 
@@ -183,7 +232,7 @@ export const tmdbService = {
   },
 
   // Rechercher des films
-  async searchMovies(query: string, page: number = 1): Promise<any> {
+  async searchMovies(query: string, page: number = 1): Promise<TMDBMovieResponse> {
     const response = await tmdbApi.get('/search/movie', {
       params: { query, page }
     });
@@ -206,6 +255,87 @@ export const tmdbService = {
   async searchMultiContent(query: string, page: number = 1): Promise<TMDBMultiSearchResponse> {
     const response = await tmdbApi.get('/search/multi', {
       params: { query, page }
+    });
+    return response.data;
+  },
+
+  // MOVIES ENDPOINTS
+  // Obtenir les films à venir
+  async getUpcomingMovies(page: number = 1): Promise<TMDBMovieResponse> {
+    const response = await tmdbApi.get('/movie/upcoming', {
+      params: { page }
+    });
+    return response.data;
+  },
+
+  // Obtenir les détails d'un film
+  async getMovieDetails(movieId: number): Promise<Movie & { videos?: VideoResponse; credits?: Credits; similar?: TMDBMovieResponse }> {
+    const response = await tmdbApi.get(`/movie/${movieId}`, {
+      params: {
+        append_to_response: 'credits,similar,recommendations,videos'
+      }
+    });
+    return response.data;
+  },
+
+  // Obtenir les vidéos d'un film (trailers, teasers, etc.)
+  async getMovieVideos(movieId: number): Promise<VideoResponse> {
+    const response = await tmdbApi.get(`/movie/${movieId}/videos`);
+    return response.data;
+  },
+
+  // Obtenir les films populaires
+  async getPopularMovies(page: number = 1): Promise<TMDBMovieResponse> {
+    const response = await tmdbApi.get('/movie/popular', {
+      params: { page }
+    });
+    return response.data;
+  },
+
+  // Obtenir les films les mieux notés
+  async getTopRatedMovies(page: number = 1): Promise<TMDBMovieResponse> {
+    const response = await tmdbApi.get('/movie/top_rated', {
+      params: { 
+        page,
+        "vote_count.gte": 500
+      }
+    });
+    return response.data;
+  },
+
+  // Obtenir les films en cours de diffusion dans les cinémas
+  async getNowPlayingMovies(page: number = 1): Promise<TMDBMovieResponse> {
+    const response = await tmdbApi.get('/movie/now_playing', {
+      params: { page }
+    });
+    return response.data;
+  },
+
+  // Découvrir des séries avec des filtres
+  async discoverSeries(params: {
+    page?: number;
+    with_genres?: string;
+    without_genres?: string;
+    first_air_date_year?: number;
+    vote_average_gte?: number;
+    vote_average_lte?: number;
+    with_original_language?: string;
+    sort_by?: string;
+  } = {}): Promise<TMDBDiscoverResponse> {
+    const response = await tmdbApi.get('/discover/tv', {
+      params: {
+        page: 1,
+        sort_by: 'popularity.desc',
+        ...params
+      }
+    });
+    return response.data;
+  },
+
+  // Obtenir les films similaires
+  async getSimilarMovies(movieId: number, page: number = 1): Promise<TMDBMovieResponse> {
+    const response = await tmdbApi.get(`/movie/${movieId}/similar`, {
+      params: { page }
     });
     return response.data;
   },

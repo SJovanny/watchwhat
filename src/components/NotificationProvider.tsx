@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
 import { CheckCircle, X, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { useHydration } from '@/hooks/useHydration';
 
 export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
@@ -42,7 +43,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id'>) => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = `notification-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     const newNotification: Notification = {
       ...notification,
       id,
@@ -84,8 +85,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
 const NotificationContainer: React.FC = () => {
   const { notifications, removeNotification } = useNotifications();
+  const isHydrated = useHydration();
 
-  if (notifications.length === 0) return null;
+  // Ne rendre les notifications qu'après l'hydratation côté client
+  if (!isHydrated || notifications.length === 0) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full">

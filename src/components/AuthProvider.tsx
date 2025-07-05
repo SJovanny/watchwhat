@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { UserService, UserData } from '@/lib/user-service'
+import { useHydration } from '@/hooks/useHydration'
 
 interface AuthContextType {
   user: UserData | null
@@ -17,8 +18,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  const isHydrated = useHydration()
 
   useEffect(() => {
+    // Attendre que l'hydratation soit terminée avant de charger l'utilisateur
+    if (!isHydrated) return
+
     // Charger l'utilisateur initial
     const loadUser = async () => {
       try {
@@ -54,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [isHydrated])
 
   const signIn = async () => {
     const result = await UserService.signInWithGoogle()

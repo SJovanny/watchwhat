@@ -333,6 +333,24 @@ export class UserService {
     }
   }
 
+  static async clearWatchedHistory(): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return false
+
+      const { error } = await supabase
+        .from('watched_series')
+        .delete()
+        .eq('user_id', user.id)
+
+      if (error) throw error
+      return true
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'historique:", error)
+      return false
+    }
+  }
+
   static async isWatched(serieId: number): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser()

@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { NotificationProvider } from "@/components/NotificationProvider";
 import { AuthProvider } from "@/components/AuthProvider";
+import ClientOnly from "@/components/ClientOnly";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,18 +33,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const bodyClassName = [
-    geistSans.variable,
-    geistMono.variable,
-    "antialiased",
-    "bg-gray-50",
-    "dark:bg-gray-900",
-    "min-h-screen"
-  ].join(" ");
-
   return (
-    <html lang="fr" className="dark">
-      <body className={bodyClassName}>
+    <html lang="fr" className={`dark ${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased bg-gray-50 dark:bg-gray-900 min-h-screen" suppressHydrationWarning>
         <AuthProvider>
           <NotificationProvider>
             <Navbar />

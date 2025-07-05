@@ -41,7 +41,7 @@ export default function DiscoverPage() {
     }
   };
 
-  const handleFiltersChange = async (filters: {
+  const handleFiltersChange = useCallback(async (filters: {
     genres?: number[];
     year?: number;
     rating?: number;
@@ -65,7 +65,7 @@ export default function DiscoverPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const handleSearchSubmit = useCallback((query: string) => {
     window.location.href = `/search?q=${encodeURIComponent(query)}`;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, Heart, Home, User, Settings, TrendingUp, LogIn, LogOut, Menu, X } from 'lucide-react';
+import { Search, Heart, Home, User, Settings, TrendingUp, LogIn, LogOut, Menu, X, Film, Tv } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 
 export default function Navbar() {
@@ -42,11 +42,19 @@ export default function Navbar() {
             </Link>
             
             <Link 
+              href="/movies" 
+              className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              <Film size={20} />
+              <span>Films</span>
+            </Link>
+            
+            <Link 
               href="/discover" 
               className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              <Search size={20} />
-              <span>Découvrir</span>
+              <Tv size={20} />
+              <span>Séries</span>
             </Link>
             
             <Link 
@@ -156,12 +164,21 @@ export default function Navbar() {
               </Link>
               
               <Link 
+                href="/movies" 
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Film size={20} />
+                <span>Films</span>
+              </Link>
+              
+              <Link 
                 href="/discover" 
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
-                <Search size={20} />
-                <span>Découvrir</span>
+                <Tv size={20} />
+                <span>Séries</span>
               </Link>
               
               {user && (
@@ -202,11 +219,19 @@ export default function Navbar() {
           </Link>
           
           <Link 
+            href="/movies" 
+            className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+          >
+            <Film size={20} />
+            <span className="text-xs">Films</span>
+          </Link>
+          
+          <Link 
             href="/discover" 
             className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
           >
-            <Search size={20} />
-            <span className="text-xs">Découvrir</span>
+            <Tv size={20} />
+            <span className="text-xs">Séries</span>
           </Link>
           
           {user ? (

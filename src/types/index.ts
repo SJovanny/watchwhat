@@ -57,6 +57,30 @@ export interface SerieDetails extends Serie {
   similar?: TMDBSearchResponse;
 }
 
+// Types détaillés pour les films
+export interface MovieDetails extends Movie {
+  runtime: number;
+  budget: number;
+  revenue: number;
+  genres: Genre[];
+  production_companies: ProductionCompany[];
+  production_countries: ProductionCountry[];
+  spoken_languages: SpokenLanguage[];
+  status: string;
+  tagline: string;
+  imdb_id: string;
+  homepage: string;
+  belongs_to_collection?: {
+    id: number;
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  };
+  credits?: Credits;
+  videos?: VideoResponse;
+  similar?: TMDBMovieResponse;
+}
+
 export interface Genre {
   id: number;
   name: string;
@@ -217,38 +241,55 @@ export interface Review {
 
 export interface TMDBReviewsResponse extends TMDBResponse<Review> {}
 
+export interface TMDBMovieResponse extends TMDBResponse<Movie> {}
+
 // Types pour les données utilisateur
 export interface UserPreferences {
   id?: string;
   userId: string;
   preferredLanguages: string[];
   favoriteGenres: number[];
+  dislikedGenres: number[];
   favoriteSeries: Serie[];
   notificationsEnabled: boolean;
   autoAddToWatchlist: boolean;
   showAdultContent: boolean;
+  // Nouvelles propriétés pour l'interface utilisateur
+  language: string;
+  country: string;
+  includeAdult: boolean;
+  minRating: number;
+  maxRating: number;
+  releaseYearFrom?: number;
+  releaseYearTo?: number;
+  theme: 'light' | 'dark' | 'auto';
+  defaultView: 'grid' | 'list';
+  itemsPerPage: number;
+  autoplay: boolean;
+  showSpoilers: boolean;
+  notifications: {
+    newReleases: boolean;
+    recommendations: boolean;
+    watchlistUpdates: boolean;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface WatchlistItem {
-  id?: string;
-  userId: string;
-  serieId: number;
-  serieData: Serie;
-  addedAt: Date;
-  priority?: 'low' | 'medium' | 'high';
-  notes?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface UserRating {
-  id?: string;
-  userId: string;
-  serieId: number;
-  rating: number;
-  review?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+// Types pour TMDBv4 Authentication
+export interface TMDBv4Account {
+  id: number;
+  name: string;
+  username: string;
+  include_adult: boolean;
+  iso_639_1: string;
+  iso_3166_1: string;
+  avatar?: {
+    gravatar?: {
+      hash: string;
+    };
+    tmdb?: {
+      avatar_path: string;
+    };
+  };
 }

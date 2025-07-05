@@ -4,7 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Sparkles, TrendingUp, Star, ChevronRight, ExternalLink } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import SerieCard from '@/components/SerieCard';
-import TrendingCarousel from '@/components/TrendingCarousel';
+import AllTrendingCarousel from '@/components/AllTrendingCarousel';
+import PopularTrailers from '@/components/PopularTrailers';
+import PopularMovies from '@/components/PopularMovies';
+import PersonalizedRecommendations from '@/components/PersonalizedRecommendations';
 import LoginButton from '@/components/LoginButton';
 import { Serie, SearchResult } from '@/types';
 import { tmdbService, generateRecommendations } from '@/lib/tmdb';
@@ -16,7 +19,7 @@ type TimeWindow = 'day' | 'week';
 
 export default function Home() {
   const { user } = useAuth();
-  const [trendingSeries, setTrendingSeries] = useState<Serie[]>([]);
+  const [trendingContent, setTrendingContent] = useState<SearchResult[]>([]);
   const [timeWindow, setTimeWindow] = useState<TimeWindow>('day');
   const [topRatedSeries, setTopRatedSeries] = useState<Serie[]>([]);
   const [recommendations, setRecommendations] = useState<Serie[]>([]);
@@ -30,19 +33,19 @@ export default function Home() {
 
   const loadData = async () => {
     try {
-      // Charger les données de base - récupérer 2 pages pour avoir plus de tendances
+      // Charger les données de base - récupérer 2 pages pour avoir plus de contenu tendance
       const [trending1, trending2, topRated] = await Promise.all([
-        tmdbService.getTrendingSeries(timeWindow, 1),
-        tmdbService.getTrendingSeries(timeWindow, 2),
+        tmdbService.getTrendingAll(timeWindow, 1),
+        tmdbService.getTrendingAll(timeWindow, 2),
         tmdbService.getTopRatedSeries()
       ]);
 
-      // Combiner les 2 pages pour avoir ~40 tendances
+      // Combiner les 2 pages pour avoir ~40 contenus tendance
       const allTrending = [
         ...(trending1.results || []),
         ...(trending2.results || [])
       ];
-      setTrendingSeries(allTrending.slice(0, 20)); // Garder les 20 premières
+      setTrendingContent(allTrending.slice(0, 20)); // Garder les 20 premiers
       setTopRatedSeries(topRated.results.slice(0, 12));
 
       // Générer des recommandations si l'utilisateur est connecté
@@ -86,27 +89,34 @@ export default function Home() {
     window.location.href = `/search?q=${encodeURIComponent(query)}`;
   }, []);
 
-  const handleResultSelect = useCallback((result: SearchResult) => {
-    if (result.media_type === 'tv') {
-      // Naviguer vers la page de détail de la série
-      window.location.href = `/serie/${result.id}`;
-    } else if (result.media_type === 'movie') {
-      // Pour les films, on pourrait créer une page dédiée ou rediriger vers TMDB
-      notify.info(
-        'Fonctionnalité bientôt disponible',
-        'Les pages de détails pour les films seront bientôt disponibles !',
-        {
-          label: 'Voir sur TMDB',
-          onClick: () => window.open(`https://www.themoviedb.org/movie/${result.id}`, '_blank')
-        }
-      );
-    }
-  }, [notify]);
+  const handleResultSelect = useCallback((query: string) => {
+    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+  }, []);
 
   const handleSerieSelect = useCallback((serie: Serie) => {
     // Naviguer vers la page de détail de la série
     window.location.href = `/serie/${serie.id}`;
   }, []);
+
+  const handleContentSelect = useCallback((content: SearchResult) => {
+    if (content.media_type === 'tv') {
+      // Naviguer vers la page de détail de la série
+      window.location.href = `/serie/${content.id}`;
+    } else if (content.media_type === 'movie') {
+      // Naviguer vers la page de détail du film
+      window.location.href = `/movie/${content.id}`;
+    } else if (content.media_type === 'person') {
+      // Pour les personnes, rediriger vers TMDB
+      notify.info(
+        'Fonctionnalité bientôt disponible',
+        'Les pages de détails pour les personnes seront bientôt disponibles !',
+        {
+          label: 'Voir sur TMDB',
+          onClick: () => window.open(`https://www.themoviedb.org/person/${content.id}`, '_blank')
+        }
+      );
+    }
+  }, [notify]);
 
   if (isLoading) {
     return (
@@ -136,14 +146,13 @@ export default function Home() {
             </p>
             
             {/* Barre de recherche */}
-            <div className="max-w-2xl mx-auto">
-              <SearchBar 
-                onResultSelect={handleResultSelect}
-                onSearchSubmit={handleSearchSubmit}
-                placeholder="Rechercher un film, une série..."
-                className="w-full"
-                maxResults={8}
-              />
+            <div className="max-w-2xl mx-auto">            <SearchBar 
+              onResultSelect={handleContentSelect}
+              onSearchSubmit={handleSearchSubmit}
+              placeholder="Rechercher un film, une série..."
+              className="w-full"
+              maxResults={8}
+            />
             </div>
 
             {/* Call to action pour utilisateurs non connectés */}
@@ -196,7 +205,7 @@ export default function Home() {
                 Tendances {timeWindow === 'day' ? "d'aujourd'hui" : "de la semaine"}
               </h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">
-                ({trendingSeries.length} séries)
+                ({trendingContent.length} contenus)
               </span>
             </div>
             <div className="flex items-center space-x-2">
@@ -221,7 +230,7 @@ export default function Home() {
                 Cette semaine
               </button>
               <button 
-                onClick={() => window.location.href = '/discover'}
+                onClick={() => window.location.href = '/trending'}
                 className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline text-sm"
               >
                 <span>Voir tout</span>
@@ -230,12 +239,20 @@ export default function Home() {
             </div>
           </div>
           
-          <TrendingCarousel 
-            series={trendingSeries}
-            onSerieClick={handleSerieSelect}
-            autoScrollInterval={4000}
+          <AllTrendingCarousel 
+            content={trendingContent}
+            onContentClick={handleContentSelect}
           />
         </section>
+
+        {/* Popular Trailers Section */}
+        <PopularTrailers className="mb-12" />
+
+        {/* Films populaires */}
+        <PopularMovies className="mb-12" />
+
+        {/* Recommandations personnalisées */}
+        <PersonalizedRecommendations className="mb-12" />
 
         {/* Mieux notées */}
         <section className="mb-12">
