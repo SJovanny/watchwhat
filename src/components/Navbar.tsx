@@ -1,19 +1,50 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { Search, Heart, Home, User, Settings, TrendingUp, LogIn, LogOut, Menu, X, Film, Tv } from 'lucide-react';
-import { useAuth } from './AuthProvider';
+import React, { useState } from "react";
+import Link from "next/link";
+import {
+  Search,
+  Heart,
+  Home,
+  User,
+  Settings,
+  TrendingUp,
+  LogIn,
+  LogOut,
+  Menu,
+  X,
+  Film,
+  Tv,
+} from "lucide-react";
+import { useAuth } from "./AuthProvider";
+import { useNotify } from "./NotificationProvider";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { user, loading, signIn, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const notify = useNotify();
+  const router = useRouter();
 
   const handleAuthAction = async () => {
     if (user) {
       await signOut();
     } else {
-      await signIn();
+      router.push("/auth");
+    }
+  };
+
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      notify.warning(
+        "Connexion requise",
+        "Veuillez vous connecter pour accéder aux paramètres",
+        {
+          label: "Se connecter",
+          onClick: () => router.push("/auth"),
+        }
+      );
     }
   };
 
@@ -33,51 +64,51 @@ export default function Navbar() {
 
           {/* Navigation Desktop */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               <Home size={20} />
               <span>Accueil</span>
             </Link>
-            
-            <Link 
-              href="/movies" 
+
+            <Link
+              href="/movies"
               className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               <Film size={20} />
               <span>Films</span>
             </Link>
-            
-            <Link 
-              href="/discover" 
+
+            <Link
+              href="/discover"
               className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               <Tv size={20} />
               <span>Séries</span>
             </Link>
-            
-            <Link 
-              href="/search" 
+
+            <Link
+              href="/search"
               className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               <Search size={20} />
               <span>Recherche</span>
             </Link>
-            
+
             {user && (
-              <Link 
-                href="/favorites" 
+              <Link
+                href="/favorites"
                 className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <Heart size={20} />
                 <span>Favoris</span>
               </Link>
             )}
-            
+
             {user && (
-              <Link 
-                href="/profile" 
+              <Link
+                href="/profile"
                 className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <User size={20} />
@@ -98,7 +129,11 @@ export default function Navbar() {
                       {user.avatar ? (
                         <img
                           src={user.avatar}
-                          alt={user.name || 'Avatar'}
+                          alt={
+                            `${user.firstName || ""} ${
+                              user.lastName || ""
+                            }`.trim() || "Avatar"
+                          }
                           className="w-8 h-8 rounded-full border-2 border-blue-500"
                         />
                       ) : (
@@ -107,10 +142,12 @@ export default function Navbar() {
                         </div>
                       )}
                       <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {user.name || 'Utilisateur'}
+                        {`${user.firstName || ""} ${
+                          user.lastName || ""
+                        }`.trim() || "Utilisateur"}
                       </span>
                     </div>
-                    
+
                     {/* Bouton de déconnexion */}
                     <button
                       onClick={handleAuthAction}
@@ -134,7 +171,8 @@ export default function Navbar() {
 
             {/* Bouton des paramètres */}
             <Link
-              href="/settings"
+              href={user ? "/settings" : "#"}
+              onClick={handleSettingsClick}
               className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <Settings size={20} />
@@ -154,46 +192,46 @@ export default function Navbar() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-800">
             <div className="flex flex-col space-y-2">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <Home size={20} />
                 <span>Accueil</span>
               </Link>
-              
-              <Link 
-                href="/movies" 
+
+              <Link
+                href="/movies"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <Film size={20} />
                 <span>Films</span>
               </Link>
-              
-              <Link 
-                href="/discover" 
+
+              <Link
+                href="/discover"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <Tv size={20} />
                 <span>Séries</span>
               </Link>
-              
+
               {user && (
                 <>
-                  <Link 
-                    href="/favorites" 
+                  <Link
+                    href="/favorites"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
                     <Heart size={20} />
                     <span>Favoris</span>
                   </Link>
-                  
-                  <Link 
-                    href="/profile" 
+
+                  <Link
+                    href="/profile"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
@@ -210,42 +248,42 @@ export default function Navbar() {
       {/* Navigation Mobile Bottom (conservée pour la compatibilité) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-4 py-2">
         <div className="flex items-center justify-around">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
           >
             <Home size={20} />
             <span className="text-xs">Accueil</span>
           </Link>
-          
-          <Link 
-            href="/movies" 
+
+          <Link
+            href="/movies"
             className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
           >
             <Film size={20} />
             <span className="text-xs">Films</span>
           </Link>
-          
-          <Link 
-            href="/discover" 
+
+          <Link
+            href="/discover"
             className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
           >
             <Tv size={20} />
             <span className="text-xs">Séries</span>
           </Link>
-          
+
           {user ? (
             <>
-              <Link 
-                href="/favorites" 
+              <Link
+                href="/favorites"
                 className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
               >
                 <Heart size={20} />
                 <span className="text-xs">Favoris</span>
               </Link>
-              
-              <Link 
-                href="/profile" 
+
+              <Link
+                href="/profile"
                 className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
               >
                 <User size={20} />

@@ -9,7 +9,7 @@ import { useNotify } from '@/components/NotificationProvider';
 import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const notify = useNotify();
 
@@ -17,17 +17,22 @@ export default function SettingsPage() {
   const [minRating, setMinRating] = useState<number>(5);
   const [allGenres, setAllGenres] = useState<Genre[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    // Attendre que l'authentification soit résolue avant de rediriger
+    if (authLoading) return;
+
     if (!user) {
-      router.push('/?error=unauthenticated');
+      router.push('/auth?redirect=/settings');
       return;
     }
 
     async function loadInitialData() {
       try {
         setIsLoading(true);
+        setLoadError(null);
         const [genresResponse, preferences] = await Promise.all([
           tmdbService.getGenres(),
           UserService.getPreferences(),
@@ -37,8 +42,10 @@ export default function SettingsPage() {
           setFavoriteGenres(preferences.favoriteGenres || []);
           setMinRating(preferences.minRating || 5);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erreur lors du chargement des données:", error);
+        const message = error?.message || String(error) || 'Erreur inconnue';
+        setLoadError(message);
         notify.error("Erreur", "Impossible de charger vos préférences.");
       } finally {
         setIsLoading(false);
@@ -85,6 +92,34 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Erreur de chargement</h1>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">Nous n'avons pas pu charger vos préférences : <span className="font-medium">{loadError}</span></p>
+          <div className="flex items-center gap-3 justify-end">
+            <button
+              onClick={() => {
+                setIsLoading(true);
+                loadInitialData();
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Réessayer
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Retour
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
