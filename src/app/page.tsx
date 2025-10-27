@@ -1,26 +1,33 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Sparkles, TrendingUp, Star, ChevronRight, ExternalLink } from 'lucide-react';
-import SearchBar from '@/components/SearchBar';
-import SerieCard from '@/components/SerieCard';
-import AllTrendingCarousel from '@/components/AllTrendingCarousel';
-import PopularTrailers from '@/components/PopularTrailers';
-import PopularMovies from '@/components/PopularMovies';
-import PersonalizedRecommendations from '@/components/PersonalizedRecommendations';
-import LoginButton from '@/components/LoginButton';
-import { Serie, SearchResult } from '@/types';
-import { tmdbService, generateRecommendations } from '@/lib/tmdb';
-import { UserService } from '@/lib/user-service';
-import { useAuth } from '@/components/AuthProvider';
-import { useNotify } from '@/components/NotificationProvider';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Sparkles,
+  TrendingUp,
+  Star,
+  ChevronRight,
+  ExternalLink,
+} from "lucide-react";
+import SearchBar from "@/components/SearchBar";
+import SerieCard from "@/components/SerieCard";
+import AllTrendingCarousel from "@/components/AllTrendingCarousel";
+import PopularTrailers from "@/components/PopularTrailers";
+import PopularMovies from "@/components/PopularMovies";
+import PersonalizedRecommendations from "@/components/PersonalizedRecommendations";
+import LoginButton from "@/components/LoginButton";
+import HeroSection from "@/components/HeroSection";
+import { Serie, SearchResult } from "@/types";
+import { tmdbService, generateRecommendations } from "@/lib/tmdb";
+import { UserService } from "@/lib/user-service";
+import { useAuth } from "@/components/AuthProvider";
+import { useNotify } from "@/components/NotificationProvider";
 
-type TimeWindow = 'day' | 'week';
+type TimeWindow = "day" | "week";
 
 export default function Home() {
   const { user } = useAuth();
   const [trendingContent, setTrendingContent] = useState<SearchResult[]>([]);
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>('day');
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>("day");
   const [topRatedSeries, setTopRatedSeries] = useState<Serie[]>([]);
   const [recommendations, setRecommendations] = useState<Serie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,13 +44,13 @@ export default function Home() {
       const [trending1, trending2, topRated] = await Promise.all([
         tmdbService.getTrendingAll(timeWindow, 1),
         tmdbService.getTrendingAll(timeWindow, 2),
-        tmdbService.getTopRatedSeries()
+        tmdbService.getTopRatedSeries(),
       ]);
 
       // Combiner les 2 pages pour avoir ~40 contenus tendance
       const allTrending = [
         ...(trending1.results || []),
-        ...(trending2.results || [])
+        ...(trending2.results || []),
       ];
       setTrendingContent(allTrending.slice(0, 20)); // Garder les 20 premiers
       setTopRatedSeries(topRated.results.slice(0, 12));
@@ -53,15 +60,18 @@ export default function Home() {
         try {
           const [preferences, watchedSeries] = await Promise.all([
             UserService.getPreferences(),
-            UserService.getWatchedSeries()
+            UserService.getWatchedSeries(),
           ]);
 
-          if (preferences && (preferences.favoriteGenres.length > 0 || watchedSeries.length > 0)) {
+          if (
+            preferences &&
+            (preferences.favoriteGenres.length > 0 || watchedSeries.length > 0)
+          ) {
             const recs = await generateRecommendations({
               favoriteGenres: preferences.favoriteGenres,
               favoriteActors: [], // TODO: Adapter quand on aura les données acteurs
-              watchedSeries: watchedSeries.map(w => w.serieId),
-              minRating: preferences.minRating
+              watchedSeries: watchedSeries.map((w) => w.serieId),
+              minRating: preferences.minRating,
             });
             setRecommendations(recs);
           } else {
@@ -69,13 +79,12 @@ export default function Home() {
             setShowOnboarding(true);
           }
         } catch (error) {
-          console.error('Erreur lors du chargement des préférences:', error);
+          console.error("Erreur lors du chargement des préférences:", error);
         }
       }
-
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      notify.error('Erreur', 'Impossible de charger les séries');
+      console.error("Erreur lors du chargement des données:", error);
+      notify.error("Erreur", "Impossible de charger les séries");
     } finally {
       setIsLoading(false);
     }
@@ -98,25 +107,32 @@ export default function Home() {
     window.location.href = `/serie/${serie.id}`;
   }, []);
 
-  const handleContentSelect = useCallback((content: SearchResult) => {
-    if (content.media_type === 'tv') {
-      // Naviguer vers la page de détail de la série
-      window.location.href = `/serie/${content.id}`;
-    } else if (content.media_type === 'movie') {
-      // Naviguer vers la page de détail du film
-      window.location.href = `/movie/${content.id}`;
-    } else if (content.media_type === 'person') {
-      // Pour les personnes, rediriger vers TMDB
-      notify.info(
-        'Fonctionnalité bientôt disponible',
-        'Les pages de détails pour les personnes seront bientôt disponibles !',
-        {
-          label: 'Voir sur TMDB',
-          onClick: () => window.open(`https://www.themoviedb.org/person/${content.id}`, '_blank')
-        }
-      );
-    }
-  }, [notify]);
+  const handleContentSelect = useCallback(
+    (content: SearchResult) => {
+      if (content.media_type === "tv") {
+        // Naviguer vers la page de détail de la série
+        window.location.href = `/serie/${content.id}`;
+      } else if (content.media_type === "movie") {
+        // Naviguer vers la page de détail du film
+        window.location.href = `/movie/${content.id}`;
+      } else if (content.media_type === "person") {
+        // Pour les personnes, rediriger vers TMDB
+        notify.info(
+          "Fonctionnalité bientôt disponible",
+          "Les pages de détails pour les personnes seront bientôt disponibles !",
+          {
+            label: "Voir sur TMDB",
+            onClick: () =>
+              window.open(
+                `https://www.themoviedb.org/person/${content.id}`,
+                "_blank"
+              ),
+          }
+        );
+      }
+    },
+    [notify]
+  );
 
   if (isLoading) {
     return (
@@ -132,40 +148,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              Découvrez votre prochaine série
-            </h1>
-            <p className="text-xl md:text-2xl text-blue-100 mb-8">
-              {user 
-                ? 'Des recommandations personnalisées basées sur vos goûts'
-                : 'Connectez-vous pour des recommandations personnalisées'
-              }
-            </p>
-            
-            {/* Barre de recherche */}
-            <div className="max-w-2xl mx-auto">            <SearchBar 
-              onResultSelect={handleContentSelect}
-              onSearchSubmit={handleSearchSubmit}
-              placeholder="Rechercher un film, une série..."
-              className="w-full"
-              maxResults={8}
-            />
-            </div>
-
-            {/* Call to action pour utilisateurs non connectés */}
-            {!user && (
-              <div className="mt-8">
-                <p className="text-blue-100 mb-4">
-                  Créez un compte pour sauvegarder vos séries et recevoir des recommandations personnalisées
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Recommandations personnalisées */}
@@ -183,7 +166,7 @@ export default function Home() {
                 <ChevronRight size={16} />
               </button>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {recommendations.slice(0, 12).map((serie) => (
                 <SerieCard
@@ -202,7 +185,8 @@ export default function Home() {
             <div className="flex items-center space-x-2">
               <TrendingUp className="h-6 w-6 text-orange-500" />
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Tendances {timeWindow === 'day' ? "d'aujourd'hui" : "de la semaine"}
+                Tendances{" "}
+                {timeWindow === "day" ? "d'aujourd'hui" : "de la semaine"}
               </h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 ({trendingContent.length} contenus)
@@ -210,27 +194,27 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => handleTimeWindowChange('day')}
+                onClick={() => handleTimeWindowChange("day")}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  timeWindow === 'day'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  timeWindow === "day"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
                 }`}
               >
                 Aujourd'hui
               </button>
               <button
-                onClick={() => handleTimeWindowChange('week')}
+                onClick={() => handleTimeWindowChange("week")}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  timeWindow === 'week'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  timeWindow === "week"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
                 }`}
               >
                 Cette semaine
               </button>
-              <button 
-                onClick={() => window.location.href = '/trending'}
+              <button
+                onClick={() => (window.location.href = "/trending")}
                 className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline text-sm"
               >
                 <span>Voir tout</span>
@@ -238,8 +222,8 @@ export default function Home() {
               </button>
             </div>
           </div>
-          
-          <AllTrendingCarousel 
+
+          <AllTrendingCarousel
             content={trendingContent}
             onContentClick={handleContentSelect}
           />
@@ -268,7 +252,7 @@ export default function Home() {
               <ChevronRight size={16} />
             </button>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {topRatedSeries.map((serie) => (
               <SerieCard
@@ -287,10 +271,11 @@ export default function Home() {
               Personnalisez vos recommandations
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Configurez vos préférences pour recevoir des suggestions encore plus précises
+              Configurez vos préférences pour recevoir des suggestions encore
+              plus précises
             </p>
-            <button 
-              onClick={() => window.location.href = '/preferences'}
+            <button
+              onClick={() => (window.location.href = "/preferences")}
               className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
               Configurer mes préférences
@@ -305,7 +290,8 @@ export default function Home() {
               Rejoignez WatchWhat
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Créez votre compte pour sauvegarder vos séries favorites, créer votre watchlist et recevoir des recommandations personnalisées.
+              Créez votre compte pour sauvegarder vos séries favorites, créer
+              votre watchlist et recevoir des recommandations personnalisées.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <LoginButton />
