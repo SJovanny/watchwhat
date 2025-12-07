@@ -1,0 +1,835 @@
+import { supabase } from "./supabase";
+import { Serie } from "@/types";
+
+export interface UserData {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  avatar?: string | null;
+}
+
+export interface WatchlistItem {
+  id: string;
+  serieId: number;
+  serieName: string;
+  serieData: Serie;
+  addedAt: string;
+}
+
+export interface WatchedSerie {
+  id: string;
+  serieId: number;
+  serieName: string;
+  serieData: Serie;
+  watchedAt: string;
+  seasonsWatched: number[];
+  episodesWatched: Record<string, number[]>;
+}
+
+export interface UserPreferences {
+  favoriteGenres: number[];
+  favoriteActors: number[];
+  minRating: number;
+  preferredLanguage: string;
+}
+
+export interface Rating {
+  id: string;
+  serieId: number;
+  rating: number;
+  review?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export class UserService {
+  // Obtenir l'utilisateur connecté
+  static async getCurrentUser(): Promise<UserData | null> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: userData } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      return (
+        userData || {
+          id: user.id,
+          email: user.email!,
+          firstName:
+            user.user_metadata?.given_name ||
+            user.user_metadata?.name?.split(" ")[0] ||
+            null,
+          lastName:
+            user.user_metadata?.family_name ||
+            user.user_metadata?.name?.split(" ")[1] ||
+            null,
+          avatar: user.user_metadata?.avatar_url || null,
+        }
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'utilisateur:", error);
+      return null;
+    }
+  }
+
+  // Créer ou mettre à jour le profil utilisateur
+  static async upsertUserProfile(userData: {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    avatar?: string;
+  }): Promise<boolean> {
+    try {
+      // Vérifier d'abord si l'utilisateur existe
+      const { data: existingUser, error: fetchError } = await supabase
+        .from("users")
+        .select("id, firstName, lastName, avatar")
+        .eq("id", userData.id)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        throw fetchError;
+      }
+
+      if (existingUser) {
+        // Mettre à jour seulement si l'utilisateur existe déjà
+        const { error } = await supabase
+          .from("users")
+          .update({
+            email: userData.email,
+            firstName: userData.firstName || existingUser.firstName,
+            lastName: userData.lastName || existingUser.lastName,
+            avatar: userData.avatar || existingUser.avatar,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userData.id);
+
+        if (error) throw error;
+      }
+      // Si l'utilisateur n'existe pas, le trigger le créera automatiquement
+
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du profil:", error);
+      return false;
+    }
+  }
+
+  // Vérifier si un email existe déjà
+  static async checkEmailExists(email: string): Promise<boolean> {
+    try {
+      // Vérifier dans public.users d'abord
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (existingUser) {
+        return true;
+      }
+
+      // Si pas dans public.users, on ne peut pas vérifier auth.users directement
+      // On laisse Supabase gérer l'erreur lors de l'inscription
+      return false;
+    } catch (error) {
+      console.error("Erreur lors de la vérification de l'email:", error);
+      return false;
+    }
+  }
+
+  // Synchroniser l'utilisateur dans public.users après connexion
+  static async syncUserAfterLogin(userId: string): Promise<void> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || user.id !== userId) return;
+
+      // Vérifier si l'utilisateur existe dans public.users
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      // Si l'utilisateur n'existe pas, le créer
+      if (!existingUser) {
+        await this.upsertUserProfile({
+          id: user.id,
+          email: user.email!,
+          firstName:
+            user.user_metadata?.given_name ||
+            user.user_metadata?.name?.split(" ")[0],
+          lastName:
+            user.user_metadata?.family_name ||
+            user.user_metadata?.name?.split(" ")[1],
+          avatar: user.user_metadata?.avatar_url,
+        });
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors de la synchronisation de l'utilisateur:",
+        error
+      );
+    }
+  }
+
+  // Authentification
+  static async signInWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      console.error("Erreur de connexion:", error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  }
+
+  static async signInWithEmail(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("Erreur de connexion:", error);
+      return { success: false, error };
+    }
+
+    // Synchroniser l'utilisateur dans public.users si nécessaire
+    if (data.user) {
+      await this.syncUserAfterLogin(data.user.id);
+    }
+
+    return { success: true, data };
+  }
+
+  static async signUpWithEmail(
+    email: string,
+    password: string,
+    firstName?: string,
+    lastName?: string
+  ) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          given_name: firstName,
+          family_name: lastName,
+          name:
+            firstName && lastName
+              ? `${firstName} ${lastName}`
+              : firstName || "",
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Erreur d'inscription:", error);
+
+      // Vérifier si c'est une erreur de compte déjà existant
+      if (
+        error.message.includes("already registered") ||
+        error.message.includes("already exists") ||
+        error.message.includes("User already registered")
+      ) {
+        return {
+          success: false,
+          error: {
+            message:
+              "Un compte avec cet email existe déjà. Veuillez vous connecter.",
+            code: "email_exists",
+            originalError: error,
+          },
+        };
+      }
+
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  }
+
+  static async signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Erreur de déconnexion:", error);
+      return { success: false, error };
+    }
+    return { success: true };
+  }
+
+  // Gestion de la watchlist
+  static async addToWatchlist(serie: Serie): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase.from("watchlist_items").insert({
+        user_id: user.id,
+        serie_id: serie.id,
+        serie_name: serie.name,
+        serie_data: serie,
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de l'ajout à la watchlist:", error);
+      return false;
+    }
+  }
+
+  static async removeFromWatchlist(serieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase
+        .from("watchlist_items")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("serie_id", serieId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la watchlist:", error);
+      return false;
+    }
+  }
+
+  static async getWatchlist(): Promise<WatchlistItem[]> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("watchlist_items")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("added_at", { ascending: false });
+
+      if (error) throw error;
+      return (
+        data?.map((item) => ({
+          id: item.id,
+          serieId: item.serie_id,
+          serieName: item.serie_name,
+          serieData: item.serie_data,
+          addedAt: item.added_at,
+        })) || []
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération de la watchlist:", error);
+      return [];
+    }
+  }
+
+  static async isInWatchlist(serieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data, error } = await supabase
+        .from("watchlist_items")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("serie_id", serieId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error("Erreur lors de la vérification de la watchlist:", error);
+      return false;
+    }
+  }
+
+  // Gestion des séries vues
+  static async markAsWatched(
+    serie: Serie,
+    seasonNumber?: number,
+    episodeNumbers?: number[]
+  ): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Vérifier si la série existe déjà
+      const { data: existing } = await supabase
+        .from("watched_series")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("serie_id", serie.id)
+        .maybeSingle();
+
+      if (existing) {
+        // Mettre à jour
+        const seasonsWatched = existing.seasons_watched || [];
+        const episodesWatched = existing.episodes_watched || {};
+
+        if (seasonNumber !== undefined) {
+          if (!seasonsWatched.includes(seasonNumber)) {
+            seasonsWatched.push(seasonNumber);
+          }
+
+          if (episodeNumbers) {
+            episodesWatched[seasonNumber.toString()] = episodeNumbers;
+          }
+        }
+
+        const { error } = await supabase
+          .from("watched_series")
+          .update({
+            seasons_watched: seasonsWatched,
+            episodes_watched: episodesWatched,
+            watched_at: new Date().toISOString(),
+          })
+          .eq("user_id", user.id)
+          .eq("serie_id", serie.id);
+
+        if (error) throw error;
+      } else {
+        // Créer nouvelle entrée
+        const seasonsWatched = seasonNumber !== undefined ? [seasonNumber] : [];
+        const episodesWatched =
+          seasonNumber !== undefined && episodeNumbers
+            ? { [seasonNumber.toString()]: episodeNumbers }
+            : {};
+
+        const { error } = await supabase.from("watched_series").insert({
+          user_id: user.id,
+          serie_id: serie.id,
+          serie_name: serie.name,
+          serie_data: serie,
+          seasons_watched: seasonsWatched,
+          episodes_watched: episodesWatched,
+        });
+
+        if (error) throw error;
+      }
+      return true;
+    } catch (error) {
+      console.error("Erreur lors du marquage comme vu:", error);
+      return false;
+    }
+  }
+
+  static async getWatchedSeries(): Promise<WatchedSerie[]> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("watched_series")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("watched_at", { ascending: false });
+
+      if (error) throw error;
+      return (
+        data?.map((serie) => ({
+          id: serie.id,
+          serieId: serie.serie_id,
+          serieName: serie.serie_name,
+          serieData: serie.serie_data,
+          watchedAt: serie.watched_at,
+          seasonsWatched: serie.seasons_watched || [],
+          episodesWatched: serie.episodes_watched || {},
+        })) || []
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération des séries vues:", error);
+      return [];
+    }
+  }
+
+  static async clearWatchedHistory(): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase
+        .from("watched_series")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'historique:", error);
+      return false;
+    }
+  }
+
+  static async isWatched(serieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data, error } = await supabase
+        .from("watched_series")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("serie_id", serieId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error("Erreur lors de la vérification si vu:", error);
+      return false;
+    }
+  }
+
+  // Gestion des préférences
+  static async updatePreferences(
+    preferences: Partial<UserPreferences>
+  ): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase.from("user_preferences").upsert({
+        user_id: user.id,
+        favorite_genres: preferences.favoriteGenres,
+        favorite_actors: preferences.favoriteActors,
+        min_rating: preferences.minRating,
+        preferred_language: preferences.preferredLanguage,
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des préférences:", error);
+      return false;
+    }
+  }
+
+  static async getPreferences(): Promise<UserPreferences | null> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from("user_preferences")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Erreur lors de la récupération des préférences:", error);
+        return null;
+      }
+
+      if (!data) return null;
+
+      return {
+        favoriteGenres: data.favorite_genres || [],
+        favoriteActors: data.favorite_actors || [],
+        minRating: data.min_rating || 7.0,
+        preferredLanguage: data.preferred_language || "fr-FR",
+      };
+    } catch (error) {
+      console.error("Erreur lors de la récupération des préférences:", error);
+      return null;
+    }
+  }
+
+  // Gestion des notes
+  static async rateSerie(
+    serieId: number,
+    rating: number,
+    review?: string
+  ): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase.from("ratings").upsert({
+        user_id: user.id,
+        serie_id: serieId,
+        rating,
+        review,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la notation:", error);
+      return false;
+    }
+  }
+
+  static async getUserRating(serieId: number): Promise<Rating | null> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from("ratings")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("serie_id", serieId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        serieId: data.serie_id,
+        rating: data.rating,
+        review: data.review,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+    } catch (error) {
+      console.error("Erreur lors de la récupération de la note:", error);
+      return null;
+    }
+  }
+
+  static async getUserRatings(): Promise<Rating[]> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("ratings")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      return (
+        data?.map((rating) => ({
+          id: rating.id,
+          serieId: rating.serie_id,
+          rating: rating.rating,
+          review: rating.review,
+          createdAt: rating.created_at,
+          updatedAt: rating.updated_at,
+        })) || []
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération des notes:", error);
+      return [];
+    }
+  }
+
+  // ============= GESTION DES FILMS =============
+
+  // Gestion de la watchlist films
+  static async addMovieToWatchlist(movie: any): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase.from("watchlist_movies").insert({
+        user_id: user.id,
+        movie_id: movie.id,
+        movie_name: movie.title,
+        movie_data: movie,
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du film à la watchlist:", error);
+      return false;
+    }
+  }
+
+  static async removeMovieFromWatchlist(movieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase
+        .from("watchlist_movies")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("movie_id", movieId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la suppression du film de la watchlist:",
+        error
+      );
+      return false;
+    }
+  }
+
+  static async isMovieInWatchlist(movieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data, error } = await supabase
+        .from("watchlist_movies")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("movie_id", movieId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error(
+        "Erreur lors de la vérification de la watchlist film:",
+        error
+      );
+      return false;
+    }
+  }
+
+  // Gestion des films vus
+  static async markMovieAsWatched(movie: any): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Le trigger PostgreSQL supprimera automatiquement de la watchlist
+      const { error } = await supabase.from("watched_movies").insert({
+        user_id: user.id,
+        movie_id: movie.id,
+        movie_name: movie.title,
+        movie_data: movie,
+      });
+
+      if (error) {
+        // Si le film existe déjà, mettre à jour la date
+        if (error.code === "23505") {
+          const { error: updateError } = await supabase
+            .from("watched_movies")
+            .update({ watched_at: new Date().toISOString() })
+            .eq("user_id", user.id)
+            .eq("movie_id", movie.id);
+
+          if (updateError) throw updateError;
+        } else {
+          throw error;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erreur lors du marquage du film comme vu:", error);
+      return false;
+    }
+  }
+
+  static async isMovieWatched(movieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data, error } = await supabase
+        .from("watched_movies")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("movie_id", movieId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error("Erreur lors de la vérification si film vu:", error);
+      return false;
+    }
+  }
+
+  static async getWatchedMovies(): Promise<any[]> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("watched_movies")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("watched_at", { ascending: false });
+
+      if (error) throw error;
+      return (
+        data?.map((movie) => ({
+          id: movie.id,
+          movieId: movie.movie_id,
+          movieName: movie.movie_name,
+          movieData: movie.movie_data,
+          watchedAt: movie.watched_at,
+        })) || []
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération des films vus:", error);
+      return [];
+    }
+  }
+
+  // Écouter les changements d'authentification
+  static onAuthStateChange(callback: (user: any) => void) {
+    return supabase.auth.onAuthStateChange((event, session) => {
+      callback(session?.user || null);
+    });
+  }
+}

@@ -65,6 +65,7 @@ L'application sera accessible sur `http://localhost:3000`
 ## 🎬 Aperçu de l'application
 
 Une fois lancée, vous pourrez :
+
 - **Naviguer** entre les différentes sections via la barre de navigation
 - **Rechercher** des séries avec la barre de recherche globale
 - **Explorer** les séries populaires et les mieux notées sur la page d'accueil
@@ -75,6 +76,7 @@ Une fois lancée, vous pourrez :
 ### 🐛 Résolution des problèmes de dates
 
 L'application gère maintenant correctement :
+
 - ✅ **Dates invalides** qui affichaient `NaN`
 - ✅ **Images manquantes** avec des placeholders automatiques
 - ✅ **Notes mal formatées** avec validation
@@ -84,40 +86,46 @@ L'application gère maintenant correctement :
 
 ```
 watchwhat/
-├── src/
-│   ├── app/                    # Pages Next.js (App Router)
-│   │   ├── page.tsx           # Page d'accueil
-│   │   ├── layout.tsx         # Layout principal
-│   │   └── globals.css        # Styles globaux
-│   ├── components/            # Composants React réutilisables
-│   │   ├── SerieCard.tsx      # Carte d'affichage des séries
-│   │   ├── SearchBar.tsx      # Barre de recherche avec autocomplétion
-│   │   ├── FilterBar.tsx      # Filtres avancés
-│   │   └── Navbar.tsx         # Navigation principale
-│   ├── lib/                   # Utilitaires et services
-│   │   ├── tmdb.ts           # Service API TMDB
-│   │   └── storage.ts        # Gestion du stockage local
-│   └── types/                 # Définitions TypeScript
-│       └── index.ts          # Types de l'application
-├── public/                    # Assets statiques
-├── .env.example              # Variables d'environnement exemple
+├── frontend/                   # Application Next.js
+│   ├── src/
+│   │   ├── app/               # Pages Next.js (App Router)
+│   │   ├── components/        # Composants React réutilisables
+│   │   ├── hooks/             # Hooks personnalisés
+│   │   ├── lib/               # Services et utilitaires
+│   │   └── types/             # Définitions TypeScript
+│   ├── public/                # Assets statiques
+│   ├── next.config.ts         # Configuration Next.js
+│   └── package.json           # Dépendances frontend
+│
+├── backend/                   # Services et configuration
+│   ├── src/
+│   │   ├── db.ts             # Client Prisma
+│   │   └── supabase.ts       # Client Supabase
+│   ├── prisma/               # Schémas et migrations
+│   └── package.json          # Dépendances backend
+│
+├── .env.local                # Variables d'environnement (à créer)
+├── package.json              # Configuration monorepo
 └── README.md                 # Documentation
 ```
 
 ## 🛠️ Technologies Utilisées
 
 ### Frontend
+
 - **Next.js 15** - Framework React avec App Router
 - **TypeScript** - Typage statique
 - **Tailwind CSS** - Framework CSS utilitaire
 - **Lucide React** - Icônes modernes
 
 ### API et Données
+
 - **TMDB API** - Base de données de films/séries
 - **Axios** - Client HTTP
 - **localStorage** - Stockage local des préférences
 
 ### Développement
+
 - **ESLint** - Linting du code
 - **Prettier** - Formatage automatique
 - **Vercel** - Déploiement recommandé
@@ -134,16 +142,19 @@ watchwhat/
 ### Fonctionnalités principales
 
 #### Recherche et Découverte
+
 - Utilisez la barre de recherche pour trouver des séries
 - Explorez les catégories: Populaires, Mieux notées, Tendances
 - Filtrez par genre, note, année de sortie
 
 #### Gestion Personnelle
+
 - Ajoutez des séries à vos favoris (❤️)
 - Marquez des séries comme vues (✓)
 - Notez et commentez vos séries
 
 #### Recommandations
+
 - L'algorithme apprend de vos préférences
 - Exclut automatiquement les séries déjà vues
 - Mise à jour en temps réel selon vos actions
@@ -151,10 +162,13 @@ watchwhat/
 ## 🎨 Personnalisation
 
 ### Thèmes
+
 L'application supporte le mode sombre automatiquement selon les préférences système.
 
 ### Responsive Design
+
 Interface optimisée pour :
+
 - 📱 Mobile (320px+)
 - 📱 Tablette (768px+)
 - 💻 Desktop (1024px+)
@@ -186,25 +200,27 @@ NEXT_PUBLIC_TMDB_API_KEY=your_production_api_key
 ### Scripts disponibles
 
 ```bash
-# Développement
-npm run dev
+# Développement (depuis la racine)
+npm run dev                    # Lance le serveur Next.js
 
 # Build de production
-npm run build
+npm run build                  # Build du frontend
 
 # Démarrer la version de production
-npm start
+npm start                      # Démarre le frontend
 
 # Linting
-npm run lint
+npm run lint                   # Lint du frontend
 
-# Correction automatique du linting
-npm run lint:fix
+# Backend (Prisma)
+npm run backend:generate       # Génère le client Prisma
+npm run backend:migrate        # Lance les migrations
 ```
 
 ### Structure des composants
 
 Chaque composant suit cette structure :
+
 ```tsx
 // 1. Imports
 import React from 'react';
@@ -281,18 +297,21 @@ export default function Component({ props }: ComponentProps) {
 ## 📊 Roadmap
 
 ### Version 1.0 (Actuelle)
+
 - ✅ Interface de base
 - ✅ Recherche et découverte
 - ✅ Gestion des favoris
 - ✅ Recommandations basiques
 
 ### Version 1.1 (Prochaine)
+
 - 🔄 Authentification utilisateur
 - 🔄 Synchronisation cloud
 - 🔄 Partage de listes
 - 🔄 Notifications
 
 ### Version 2.0 (Future)
+
 - 📱 Application mobile (React Native)
 - 🎥 Support des films
 - 🤖 IA avancée pour recommandations
