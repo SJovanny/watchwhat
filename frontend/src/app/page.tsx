@@ -79,6 +79,7 @@ export default function Home() {
       }
 
       setTrendingContent(allTrending.slice(0, 20)); // Garder les 20 premiers après filtrage
+      console.log(`[DEBUG] Trending loaded: ${allTrending.length} total, showing ${Math.min(allTrending.length, 20)}`);
 
       // Filtrer et définir les séries les mieux notées
       let topSeries = topRated.results || [];

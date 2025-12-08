@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Play, Calendar, Star, Film, X, Eye, Heart, Sparkles, TrendingUp, Zap, Award } from 'lucide-react';
+import { Play, Calendar, Star, Film, X, Eye, Heart, Sparkles, TrendingUp, Zap, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Movie, Serie, Video, SearchResult } from '@/types';
 import { tmdbService, getImageUrl } from '@/lib/tmdb';
 
@@ -20,6 +20,37 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
   const [selectedTrailer, setSelectedTrailer] = useState<TrailerItem | null>(null);
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
   const [backgroundTrailers, setBackgroundTrailers] = useState<TrailerItem[]>([]);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Gestion du scroll pour les boutons de navigation
+  const updateScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -400, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 400, behavior: 'smooth' });
+    }
+  };
+
+  // Mettre à jour les boutons après le chargement des trailers
+  useEffect(() => {
+    if (trailers.length > 0) {
+      setTimeout(updateScrollButtons, 100);
+    }
+  }, [trailers]);
 
   useEffect(() => {
     loadTrailers();
@@ -480,9 +511,44 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
           </div>
 
           {/* Grid de trailers en format horizontal compact */}
-          <div className="overflow-x-auto scrollbar-hide">
-            <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
-              {trailers.slice(0, 20).map((trailerItem, index) => (
+          <div className="relative">
+            {/* Boutons de navigation pour desktop */}
+            {canScrollLeft && (
+              <button
+                onClick={scrollLeft}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 group"
+                aria-label="Trailers précédents"
+              >
+                <div className="relative">
+                  <div className="p-3 bg-gradient-to-br from-violet-600/90 to-purple-700/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl hover:from-violet-500 hover:to-purple-600 transition-all duration-300 group-hover:scale-110">
+                    <ChevronLeft className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
+                </div>
+              </button>
+            )}
+            {canScrollRight && (
+              <button
+                onClick={scrollRight}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 group"
+                aria-label="Trailers suivants"
+              >
+                <div className="relative">
+                  <div className="p-3 bg-gradient-to-br from-violet-600/90 to-purple-700/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl hover:from-violet-500 hover:to-purple-600 transition-all duration-300 group-hover:scale-110">
+                    <ChevronRight className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
+                </div>
+              </button>
+            )}
+            
+            <div 
+              ref={scrollContainerRef}
+              onScroll={updateScrollButtons}
+              className="overflow-x-auto scrollbar-hide scroll-smooth px-8"
+            >
+              <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
+                {trailers.slice(0, 20).map((trailerItem, index) => (
                 <div
                   key={`${trailerItem.content.id}-${index}`}
                   className="group cursor-pointer flex-shrink-0"
@@ -578,6 +644,7 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           </div>
 
