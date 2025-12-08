@@ -1,97 +1,155 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Heart, Star, Eye, Download, Upload, Settings, Trash2, BarChart3 } from 'lucide-react';
-import { storageService } from '@/lib/storage';
-import { UserPreferences, WatchedSerie, Serie } from '@/types';
+import React, { useState, useEffect } from "react";
+import {
+  Heart,
+  Star,
+  Eye,
+  Download,
+  Upload,
+  Settings,
+  Trash2,
+  BarChart3,
+  LogIn,
+  User,
+} from "lucide-react";
+import { UserService } from "@/lib/user-service";
+import { useAuth } from "@/components/AuthProvider";
+import Link from "next/link";
 
 export default function ProfilePage() {
-  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
-  const [favoriteSeries, setFavoriteSeries] = useState<Serie[]>([]);
+  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({
-    totalWatched: 0,
-    totalFavorites: 0,
+    watchlistCount: 0,
+    watchedCount: 0,
+    ratingsCount: 0,
     averageRating: 0,
-    totalHours: 0
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = () => {
-    const userPrefs = storageService.getUserPreferences();
-    const watched = storageService.getWatchedSeries();
-    const favorites = storageService.getFavoriteSeries();
-
-    setPreferences(userPrefs);
-    setFavoriteSeries(favorites);
-
-    // Calculer les statistiques
-    const totalWatched = watched.length;
-    const totalFavorites = favorites.length;
-    const ratingsWithValue = watched.filter(w => w.rating && w.rating > 0);
-    const averageRating = ratingsWithValue.length > 0 
-      ? ratingsWithValue.reduce((sum, w) => sum + (w.rating || 0), 0) / ratingsWithValue.length 
-      : 0;
-
-    // Estimation des heures (moyenne de 45min par épisode, 20 épisodes par série)
-    const totalHours = totalWatched * 45 * 20 / 60;
-
-    setStats({
-      totalWatched,
-      totalFavorites,
-      averageRating,
-      totalHours
-    });
-  };
-
-  const handleExportData = () => {
-    const data = storageService.exportUserData();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `watchwhat-export-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = e.target?.result as string;
-          const success = storageService.importUserData(data);
-          if (success) {
-            alert('Données importées avec succès !');
-            loadUserData();
-          } else {
-            alert('Erreur lors de l\'import des données.');
-          }
-        } catch (error) {
-          alert('Fichier invalide.');
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleClearAllData = () => {
-    if (confirm('⚠️ Attention ! Cette action supprimera définitivement toutes vos données (favoris, historique, préférences). Cette action est irréversible. Voulez-vous continuer ?')) {
-      storageService.clearAllData();
+    if (user) {
       loadUserData();
-      alert('Toutes vos données ont été supprimées.');
+    } else if (!authLoading) {
+      setIsLoading(false);
+    }
+  }, [user, authLoading]);
+
+  const loadUserData = async () => {
+    setIsLoading(true);
+    try {
+      const userStats = await UserService.getUserStats();
+      if (userStats) {
+        setStats(userStats);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des données:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (!preferences) {
+  const handleExportData = async () => {
+    try {
+      const [seriesWL, moviesWL, watchedSeries, watchedMovies, ratings] =
+        await Promise.all([
+          UserService.getWatchlist(),
+          UserService.getMoviesWatchlist(),
+          UserService.getWatchedSeries(),
+          UserService.getWatchedMovies(),
+          UserService.getUserRatings(),
+        ]);
+
+      const data = {
+        exportDate: new Date().toISOString(),
+        watchlistSeries: seriesWL,
+        watchlistMovies: moviesWL,
+        watchedSeries: watchedSeries,
+        watchedMovies: watchedMovies,
+        ratings: ratings,
+      };
+
+      const jsonString = JSON.stringify(data, null, 2);
+      const filename = `watchwhat-export-${new Date().toISOString().split("T")[0]}.json`;
+      
+      // Créer le blob avec le bon type MIME
+      const blob = new Blob([jsonString], {
+        type: "application/json;charset=utf-8",
+      });
+      
+      // Créer l'URL et le lien de téléchargement
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = url;
+      link.setAttribute("download", filename);
+      
+      // Ajouter au DOM, cliquer, puis nettoyer
+      document.body.appendChild(link);
+      link.click();
+      
+      // Nettoyer après un court délai
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+    } catch (error) {
+      console.error("Erreur lors de l'export:", error);
+      alert("Erreur lors de l'export des données");
+    }
+  };
+
+  const handleClearAllData = async () => {
+    if (
+      confirm(
+        "⚠️ Attention ! Cette action supprimera définitivement toutes vos données (watchlist, historique). Cette action est irréversible. Voulez-vous continuer ?"
+      )
+    ) {
+      try {
+        await Promise.all([
+          UserService.clearWatchlist(),
+          UserService.clearAllWatchedHistory(),
+        ]);
+        loadUserData();
+        alert("Toutes vos données ont été supprimées.");
+      } catch (error) {
+        console.error("Erreur lors de la suppression:", error);
+        alert("Erreur lors de la suppression des données");
+      }
+    }
+  };
+
+  // Affichage si non connecté
+  if (!authLoading && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-20">
+            <User className="h-20 w-20 text-gray-400 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Mon Profil
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+              Connectez-vous pour accéder à vos statistiques et préférences
+            </p>
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              <LogIn size={20} />
+              <span>Se connecter</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Affichage du chargement
+  if (isLoading || authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -102,30 +160,47 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Mon Profil
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Gérez vos préférences et consultez vos statistiques
-          </p>
+          <div className="flex items-center space-x-4 mb-4">
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt="Avatar"
+                className="w-16 h-16 rounded-full"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                {user?.email?.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {user?.firstName ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}` : user?.email?.split("@")[0]}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
+            </div>
+          </div>
         </div>
 
         {/* Statistiques */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
             <div className="flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg mx-auto mb-4">
-              <Eye className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <Heart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalWatched}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Séries vues</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {stats.watchlistCount}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">À voir</div>
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
-            <div className="flex items-center justify-center w-12 h-12 bg-red-100 dark:bg-red-900 rounded-lg mx-auto mb-4">
-              <Heart className="h-6 w-6 text-red-600 dark:text-red-400" />
+            <div className="flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg mx-auto mb-4">
+              <Eye className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalFavorites}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Favoris</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {stats.watchedCount}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Vus</div>
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
@@ -139,58 +214,13 @@ export default function ProfilePage() {
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
-            <div className="flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg mx-auto mb-4">
-              <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg mx-auto mb-4">
+              <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {Math.round(stats.totalHours)}h
+              {stats.ratingsCount}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Estimées</div>
-          </div>
-        </div>
-
-        {/* Préférences */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <Settings className="h-5 w-5 mr-2" />
-            Vos Préférences
-          </h2>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white mb-2">Notifications</h3>
-              <div className="flex items-center space-x-2">
-                <span className="text-gray-600 dark:text-gray-400">
-                  {preferences.notificationsEnabled ? 'Activées' : 'Désactivées'}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white mb-2">Langues préférées</h3>
-              <div className="flex flex-wrap gap-2">
-                {preferences.preferredLanguages.map((lang: string) => (
-                  <span key={lang} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded">
-                    {lang.toUpperCase()}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="md:col-span-2">
-              <h3 className="font-medium text-gray-900 dark:text-white mb-2">Genres favoris</h3>
-              <div className="flex flex-wrap gap-2">
-                {preferences.favoriteGenres.length > 0 ? (
-                  preferences.favoriteGenres.map((genreId: number) => (
-                    <span key={genreId} className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm rounded-full">
-                      Genre #{genreId}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">Aucun genre sélectionné</span>
-                )}
-              </div>
-            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Notes données</div>
           </div>
         </div>
 
@@ -200,7 +230,7 @@ export default function ProfilePage() {
             <Settings className="h-5 w-5 mr-2" />
             Gestion des Données
           </h2>
-          
+
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <button
@@ -210,17 +240,6 @@ export default function ProfilePage() {
                 <Download className="h-4 w-4" />
                 <span>Exporter mes données</span>
               </button>
-
-              <label className="flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
-                <Upload className="h-4 w-4" />
-                <span>Importer des données</span>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportData}
-                  className="hidden"
-                />
-              </label>
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -232,7 +251,7 @@ export default function ProfilePage() {
                 <span>Supprimer toutes mes données</span>
               </button>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Cette action est irréversible et supprimera tous vos favoris, historique et préférences.
+                Cette action est irréversible et supprimera votre watchlist et historique.
               </p>
             </div>
           </div>
@@ -242,16 +261,16 @@ export default function ProfilePage() {
         <div className="mt-8 text-center">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => window.location.href = '/discover'}
+              onClick={() => (window.location.href = "/discover")}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
-              Découvrir des séries
+              Découvrir du contenu
             </button>
             <button
-              onClick={() => window.location.href = '/favorites'}
+              onClick={() => (window.location.href = "/favorites")}
               className="bg-gray-600 dark:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
-              Voir mes favoris
+              Voir ma collection
             </button>
           </div>
         </div>

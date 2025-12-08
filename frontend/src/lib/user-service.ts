@@ -832,4 +832,201 @@ export class UserService {
       callback(session?.user || null);
     });
   }
+
+  // ============= MÉTHODES SUPPLÉMENTAIRES =============
+
+  // Obtenir la watchlist des films
+  static async getMoviesWatchlist(): Promise<any[]> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("watchlist_movies")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("added_at", { ascending: false });
+
+      if (error) throw error;
+      return (
+        data?.map((item) => ({
+          id: item.id,
+          movieId: item.movie_id,
+          movieName: item.movie_name,
+          movieData: item.movie_data,
+          addedAt: item.added_at,
+        })) || []
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération de la watchlist films:", error);
+      return [];
+    }
+  }
+
+  // Supprimer une série de l'historique des vues
+  static async removeWatchedSerie(serieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase
+        .from("watched_series")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("serie_id", serieId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la série vue:", error);
+      return false;
+    }
+  }
+
+  // Supprimer un film de l'historique des vues
+  static async removeWatchedMovie(movieId: number): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { error } = await supabase
+        .from("watched_movies")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("movie_id", movieId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la suppression du film vu:", error);
+      return false;
+    }
+  }
+
+  // Vider toute la watchlist (séries et films)
+  static async clearWatchlist(): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Supprimer watchlist séries
+      await supabase
+        .from("watchlist_items")
+        .delete()
+        .eq("user_id", user.id);
+
+      // Supprimer watchlist films
+      await supabase
+        .from("watchlist_movies")
+        .delete()
+        .eq("user_id", user.id);
+
+      return true;
+    } catch (error) {
+      console.error("Erreur lors du nettoyage de la watchlist:", error);
+      return false;
+    }
+  }
+
+  // Vider tout l'historique des vues (séries et films)
+  static async clearAllWatchedHistory(): Promise<boolean> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Supprimer séries vues
+      await supabase
+        .from("watched_series")
+        .delete()
+        .eq("user_id", user.id);
+
+      // Supprimer films vus
+      await supabase
+        .from("watched_movies")
+        .delete()
+        .eq("user_id", user.id);
+
+      return true;
+    } catch (error) {
+      console.error("Erreur lors du nettoyage de l'historique:", error);
+      return false;
+    }
+  }
+
+  // Obtenir les statistiques de l'utilisateur
+  static async getUserStats(): Promise<{
+    watchlistCount: number;
+    watchedCount: number;
+    ratingsCount: number;
+    averageRating: number;
+  } | null> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      // Récupérer toutes les données en parallèle
+      const [
+        seriesWatchlist,
+        moviesWatchlist,
+        watchedSeries,
+        watchedMovies,
+        ratings,
+      ] = await Promise.all([
+        supabase
+          .from("watchlist_items")
+          .select("id", { count: "exact" })
+          .eq("user_id", user.id),
+        supabase
+          .from("watchlist_movies")
+          .select("id", { count: "exact" })
+          .eq("user_id", user.id),
+        supabase
+          .from("watched_series")
+          .select("id", { count: "exact" })
+          .eq("user_id", user.id),
+        supabase
+          .from("watched_movies")
+          .select("id", { count: "exact" })
+          .eq("user_id", user.id),
+        supabase
+          .from("ratings")
+          .select("rating")
+          .eq("user_id", user.id),
+      ]);
+
+      const watchlistCount =
+        (seriesWatchlist.count || 0) + (moviesWatchlist.count || 0);
+      const watchedCount =
+        (watchedSeries.count || 0) + (watchedMovies.count || 0);
+      const ratingsCount = ratings.data?.length || 0;
+
+      let averageRating = 0;
+      if (ratings.data && ratings.data.length > 0) {
+        const sum = ratings.data.reduce((acc, r) => acc + r.rating, 0);
+        averageRating = Math.round((sum / ratings.data.length) * 10) / 10;
+      }
+
+      return {
+        watchlistCount,
+        watchedCount,
+        ratingsCount,
+        averageRating,
+      };
+    } catch (error) {
+      console.error("Erreur lors de la récupération des stats:", error);
+      return null;
+    }
+  }
 }

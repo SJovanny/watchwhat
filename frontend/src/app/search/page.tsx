@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Search, Filter, Grid, List, Film, Tv } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import SerieCard from '@/components/SerieCard';
+import MovieCard from '@/components/MovieCard';
 import { Serie, SearchResult, Movie } from '@/types';
 import { tmdbService } from '@/lib/tmdb';
 import { storageService } from '@/lib/storage';
@@ -104,16 +105,9 @@ function SearchContent() {
     if (result.media_type === 'tv') {
       window.location.href = `/serie/${result.id}`;
     } else if (result.media_type === 'movie') {
-      notify.info(
-        'Fonctionnalité bientôt disponible',
-        'Les pages de détails pour les films seront bientôt disponibles !',
-        {
-          label: 'Voir sur TMDB',
-          onClick: () => window.open(`https://www.themoviedb.org/movie/${result.id}`, '_blank')
-        }
-      );
+      window.location.href = `/movie/${result.id}`;
     }
-  }, [notify]);
+  }, []);
 
   const handleSerieClick = useCallback((serie: Serie) => {
     window.location.href = `/serie/${serie.id}`;
@@ -257,42 +251,13 @@ function SearchContent() {
                       />
                     );
                   } else {
-                    // Pour les films, on affiche un card personnalisé
-                    const movie = result as Movie;
+                    // Pour les films, utiliser MovieCard
                     return (
-                      <div
-                        key={movie.id}
-                        onClick={() => handleResultSelect(movie)}
-                        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                      >
-                        <div className="relative aspect-[2/3]">
-                          <img
-                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                            alt={movie.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/placeholder-poster.svg';
-                            }}
-                          />
-                          <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs flex items-center gap-1">
-                            <Film className="h-3 w-3" />
-                            Film
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-1 line-clamp-2">
-                            {movie.title}
-                          </h3>
-                          <p className="text-gray-500 dark:text-gray-400 text-xs mb-2">
-                            {movie.release_date ? formatDateToYear(movie.release_date) : 'N/A'}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center text-yellow-500 text-xs">
-                              <span>★ {formatRating(movie.vote_average)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <MovieCard
+                        key={result.id}
+                        movie={result as Movie}
+                        onMovieClick={(movie) => window.location.href = `/movie/${movie.id}`}
+                      />
                     );
                   }
                 })}
