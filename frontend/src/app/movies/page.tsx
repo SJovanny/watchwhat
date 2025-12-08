@@ -7,7 +7,6 @@ import { Movie } from "@/types";
 import { tmdbService } from "@/lib/tmdb";
 import MovieCard from "@/components/MovieCard";
 import SearchBar from "@/components/SearchBar";
-import HeroSection from "@/components/HeroSection";
 import UnifiedFilterBar, { FilterState } from "@/components/UnifiedFilterBar";
 
 export default function MoviesPage() {
@@ -158,9 +157,6 @@ export default function MoviesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Hero presentation */}
-      <HeroSection />
-
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-8">
