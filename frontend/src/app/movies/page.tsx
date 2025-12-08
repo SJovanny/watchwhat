@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Film, TrendingUp, Star, Calendar, Search, Filter } from "lucide-react";
+import { Film, Search } from "lucide-react";
 import { Movie } from "@/types";
 import { tmdbService } from "@/lib/tmdb";
 import MovieCard from "@/components/MovieCard";
 import SearchBar from "@/components/SearchBar";
 import HeroSection from "@/components/HeroSection";
+import UnifiedFilterBar, { FilterState } from "@/components/UnifiedFilterBar";
 
 export default function MoviesPage() {
   const router = useRouter();
@@ -17,46 +18,112 @@ export default function MoviesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [activeTab, setActiveTab] = useState<
-    "popular" | "top_rated" | "now_playing" | "upcoming"
-  >("popular");
   const [isSearching, setIsSearching] = useState(false);
+  const [currentFilters, setCurrentFilters] = useState<FilterState | null>(null);
 
-  useEffect(() => {
-    loadMovies();
-  }, [currentPage, activeTab]);
-
-  const loadMovies = async () => {
+  // Charger les films avec les filtres
+  const loadMovies = useCallback(async (page: number = 1, filters?: FilterState) => {
     try {
       setIsLoading(true);
-      let response;
+      
+      // Construire les paramètres de l'API
+      const params: Record<string, any> = {
+        page,
+      };
 
-      switch (activeTab) {
-        case "popular":
-          response = await tmdbService.getPopularMovies(currentPage);
-          break;
-        case "top_rated":
-          response = await tmdbService.getTopRatedMovies(currentPage);
-          break;
-        case "now_playing":
-          response = await tmdbService.getNowPlayingMovies(currentPage);
-          break;
-        case "upcoming":
-          response = await tmdbService.getUpcomingMovies(currentPage);
-          break;
-        default:
-          response = await tmdbService.getPopularMovies(currentPage);
+      if (filters) {
+        // Tri
+        if (filters.sortBy) {
+          params.sort_by = filters.sortBy;
+        }
+
+        // Genres
+        if (filters.genres.length > 0) {
+          params.with_genres = filters.genres.join(',');
+        }
+
+        // Services de streaming
+        if (filters.watchProviders.length > 0) {
+          params.with_watch_providers = filters.watchProviders.join('|');
+          params.watch_region = filters.watchRegion || 'FR';
+        }
+
+        // Types de monétisation
+        if (filters.monetizationTypes.length > 0) {
+          params.with_watch_monetization_types = filters.monetizationTypes.join('|');
+        }
+
+        // Dates de sortie
+        if (filters.releaseDateFrom) {
+          params.primary_release_date_gte = filters.releaseDateFrom;
+        }
+        if (filters.releaseDateTo) {
+          params.primary_release_date_lte = filters.releaseDateTo;
+        }
+
+        // Certification
+        if (filters.certification) {
+          params.certification = filters.certification;
+          params.certification_country = 'FR';
+        }
+
+        // Langue
+        if (filters.originalLanguage) {
+          params.with_original_language = filters.originalLanguage;
+        }
+
+        // Score
+        if (filters.voteAverageMin > 0) {
+          params.vote_average_gte = filters.voteAverageMin;
+        }
+        if (filters.voteAverageMax < 10) {
+          params.vote_average_lte = filters.voteAverageMax;
+        }
+
+        // Nombre de votes
+        if (filters.voteCountMin > 0) {
+          params.vote_count_gte = filters.voteCountMin;
+        }
+
+        // Durée
+        if (filters.runtimeMin > 0) {
+          params.with_runtime_gte = filters.runtimeMin;
+        }
+        if (filters.runtimeMax < 400) {
+          params.with_runtime_lte = filters.runtimeMax;
+        }
+
+        // Mots-clés
+        if (filters.keywords.length > 0) {
+          params.with_keywords = filters.keywords.map(k => k.id).join(',');
+        }
       }
 
+      const response = await tmdbService.discoverMovies(params);
       setMovies(response.results);
-      setTotalPages(response.total_pages);
+      setTotalPages(Math.min(response.total_pages, 500)); // TMDB limite à 500 pages
     } catch (error) {
       console.error("Erreur lors du chargement des films:", error);
       setMovies([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Charger les films au montage
+  useEffect(() => {
+    loadMovies(1);
+  }, [loadMovies]);
+
+  // Gérer les changements de filtres
+  const handleFiltersChange = useCallback((filters: FilterState) => {
+    setCurrentFilters(filters);
+    setCurrentPage(1);
+    setSearchQuery("");
+    setIsSearching(false);
+    setSearchResults([]);
+    loadMovies(1, filters);
+  }, [loadMovies]);
 
   const handleMovieSelect = (movie: Movie) => {
     router.push(`/movie/${movie.id}`);
@@ -81,49 +148,10 @@ export default function MoviesPage() {
     }
   };
 
-  const handleTabChange = (
-    tab: "popular" | "top_rated" | "now_playing" | "upcoming"
-  ) => {
-    setActiveTab(tab);
-    setCurrentPage(1);
-    setSearchQuery("");
-    setIsSearching(false);
-    setSearchResults([]);
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    loadMovies(page, currentFilters || undefined);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const getTabLabel = (tab: string) => {
-    switch (tab) {
-      case "popular":
-        return "Populaires";
-      case "top_rated":
-        return "Mieux notés";
-      case "now_playing":
-        return "En salles";
-      case "upcoming":
-        return "À venir";
-      default:
-        return "Populaires";
-    }
-  };
-
-  const getTabIcon = (tab: string) => {
-    switch (tab) {
-      case "popular":
-        return TrendingUp;
-      case "top_rated":
-        return Star;
-      case "now_playing":
-        return Film;
-      case "upcoming":
-        return Calendar;
-      default:
-        return TrendingUp;
-    }
   };
 
   const displayedMovies = isSearching && searchQuery ? searchResults : movies;
@@ -152,51 +180,25 @@ export default function MoviesPage() {
               </div>
             </div>
 
-            {/* Barre de recherche */}
-            <div className="flex-1 max-w-md lg:max-w-lg">
-              <SearchBar
-                onResultSelect={(result) => {
-                  if (result.media_type === "movie") {
-                    handleMovieSelect(result as Movie);
-                  }
-                }}
-                onSearchSubmit={handleSearch}
-                placeholder="Rechercher un film..."
-                className="w-full"
+            {/* Barre de recherche et filtres */}
+            <div className="flex flex-col sm:flex-row gap-4 flex-1 max-w-2xl">
+              <div className="flex-1">
+                <SearchBar
+                  onResultSelect={(result) => {
+                    if (result.media_type === "movie") {
+                      handleMovieSelect(result as Movie);
+                    }
+                  }}
+                  onSearchSubmit={handleSearch}
+                  placeholder="Rechercher un film..."
+                  className="w-full"
+                />
+              </div>
+              <UnifiedFilterBar
+                mediaType="movie"
+                onFiltersChange={handleFiltersChange}
               />
             </div>
-          </div>
-
-          {/* Tabs de navigation */}
-          <div className="mt-8 border-b border-gray-200 dark:border-gray-700">
-            <nav className="-mb-px flex space-x-8 overflow-x-auto">
-              {(
-                ["popular", "top_rated", "now_playing", "upcoming"] as const
-              ).map((tab) => {
-                const Icon = getTabIcon(tab);
-                const isActive = activeTab === tab;
-
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => handleTabChange(tab)}
-                    className={`group inline-flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                      isActive
-                        ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                        : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
-                    }`}
-                  >
-                    <Icon
-                      size={16}
-                      className={
-                        isActive ? "text-blue-600 dark:text-blue-400" : ""
-                      }
-                    />
-                    <span>{getTabLabel(tab)}</span>
-                  </button>
-                );
-              })}
-            </nav>
           </div>
         </div>
       </div>
@@ -302,7 +304,7 @@ export default function MoviesPage() {
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
               {isSearching
-                ? "Essayez avec d'autres termes de recherche"
+                ? "Essayez avec d'autres termes de recherche ou modifiez vos filtres"
                 : "Les films seront bientôt disponibles"}
             </p>
           </div>
@@ -311,3 +313,4 @@ export default function MoviesPage() {
     </div>
   );
 }
+

@@ -12,7 +12,12 @@ import {
   Credits,
   TMDBReviewsResponse,
   TMDBMultiSearchResponse,
+  WatchProvider,
+  CertificationsResponse,
+  Language,
+  KeywordSearchResponse,
 } from "@/types";
+
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
@@ -399,6 +404,147 @@ export const tmdbService = {
   ): Promise<TMDBMovieResponse> {
     const response = await tmdbApi.get(`/movie/${movieId}/similar`, {
       params: { page },
+    });
+    return response.data;
+  },
+
+  // ===== NOUVEAUX ENDPOINTS POUR LES FILTRES =====
+
+  // Obtenir les services de streaming disponibles
+  async getWatchProviders(
+    mediaType: "movie" | "tv",
+    region: string = "FR"
+  ): Promise<WatchProvider[]> {
+    const response = await tmdbApi.get(`/watch/providers/${mediaType}`, {
+      params: { watch_region: region },
+    });
+    return response.data.results || [];
+  },
+
+  // Obtenir les certifications (classifications d'âge)
+  async getCertifications(
+    mediaType: "movie" | "tv"
+  ): Promise<CertificationsResponse> {
+    const response = await tmdbApi.get(`/certification/${mediaType}/list`);
+    return response.data;
+  },
+
+  // Obtenir la liste des langues
+  async getLanguages(): Promise<Language[]> {
+    const response = await tmdbApi.get("/configuration/languages");
+    return response.data;
+  },
+
+  // Rechercher des mots-clés
+  async searchKeywords(query: string): Promise<KeywordSearchResponse> {
+    const response = await tmdbApi.get("/search/keyword", {
+      params: { query },
+    });
+    return response.data;
+  },
+
+  // Découvrir des films avec filtres avancés
+  async discoverMovies(
+    params: {
+      page?: number;
+      with_genres?: string;
+      without_genres?: string;
+      year?: number;
+      primary_release_date_gte?: string;
+      primary_release_date_lte?: string;
+      vote_average_gte?: number;
+      vote_average_lte?: number;
+      vote_count_gte?: number;
+      with_original_language?: string;
+      with_runtime_gte?: number;
+      with_runtime_lte?: number;
+      with_watch_providers?: string;
+      watch_region?: string;
+      with_watch_monetization_types?: string;
+      certification?: string;
+      certification_country?: string;
+      with_keywords?: string;
+      sort_by?: string;
+    } = {}
+  ): Promise<TMDBMovieResponse> {
+    // Transformer les noms de paramètres pour utiliser la notation avec points de TMDB
+    const apiParams: Record<string, any> = {
+      page: params.page || 1,
+      sort_by: params.sort_by || "popularity.desc",
+    };
+
+    // Mapper les paramètres avec underscores vers la notation avec points
+    if (params.with_genres) apiParams.with_genres = params.with_genres;
+    if (params.without_genres) apiParams.without_genres = params.without_genres;
+    if (params.year) apiParams.year = params.year;
+    if (params.primary_release_date_gte) apiParams["primary_release_date.gte"] = params.primary_release_date_gte;
+    if (params.primary_release_date_lte) apiParams["primary_release_date.lte"] = params.primary_release_date_lte;
+    if (params.vote_average_gte) apiParams["vote_average.gte"] = params.vote_average_gte;
+    if (params.vote_average_lte) apiParams["vote_average.lte"] = params.vote_average_lte;
+    if (params.vote_count_gte) apiParams["vote_count.gte"] = params.vote_count_gte;
+    if (params.with_original_language) apiParams.with_original_language = params.with_original_language;
+    if (params.with_runtime_gte) apiParams["with_runtime.gte"] = params.with_runtime_gte;
+    if (params.with_runtime_lte) apiParams["with_runtime.lte"] = params.with_runtime_lte;
+    if (params.with_watch_providers) apiParams.with_watch_providers = params.with_watch_providers;
+    if (params.watch_region) apiParams.watch_region = params.watch_region;
+    if (params.with_watch_monetization_types) apiParams.with_watch_monetization_types = params.with_watch_monetization_types;
+    if (params.certification) apiParams.certification = params.certification;
+    if (params.certification_country) apiParams.certification_country = params.certification_country;
+    if (params.with_keywords) apiParams.with_keywords = params.with_keywords;
+
+    const response = await tmdbApi.get("/discover/movie", {
+      params: apiParams,
+    });
+    return response.data;
+  },
+
+  // Découvrir des séries avec filtres avancés (mise à jour)
+  async discoverSeriesAdvanced(
+    params: {
+      page?: number;
+      with_genres?: string;
+      without_genres?: string;
+      first_air_date_year?: number;
+      first_air_date_gte?: string;
+      first_air_date_lte?: string;
+      vote_average_gte?: number;
+      vote_average_lte?: number;
+      vote_count_gte?: number;
+      with_original_language?: string;
+      with_runtime_gte?: number;
+      with_runtime_lte?: number;
+      with_watch_providers?: string;
+      watch_region?: string;
+      with_watch_monetization_types?: string;
+      with_keywords?: string;
+      sort_by?: string;
+    } = {}
+  ): Promise<TMDBDiscoverResponse> {
+    // Transformer les noms de paramètres pour utiliser la notation avec points de TMDB
+    const apiParams: Record<string, any> = {
+      page: params.page || 1,
+      sort_by: params.sort_by || "popularity.desc",
+    };
+
+    // Mapper les paramètres avec underscores vers la notation avec points
+    if (params.with_genres) apiParams.with_genres = params.with_genres;
+    if (params.without_genres) apiParams.without_genres = params.without_genres;
+    if (params.first_air_date_year) apiParams.first_air_date_year = params.first_air_date_year;
+    if (params.first_air_date_gte) apiParams["first_air_date.gte"] = params.first_air_date_gte;
+    if (params.first_air_date_lte) apiParams["first_air_date.lte"] = params.first_air_date_lte;
+    if (params.vote_average_gte) apiParams["vote_average.gte"] = params.vote_average_gte;
+    if (params.vote_average_lte) apiParams["vote_average.lte"] = params.vote_average_lte;
+    if (params.vote_count_gte) apiParams["vote_count.gte"] = params.vote_count_gte;
+    if (params.with_original_language) apiParams.with_original_language = params.with_original_language;
+    if (params.with_runtime_gte) apiParams["with_runtime.gte"] = params.with_runtime_gte;
+    if (params.with_runtime_lte) apiParams["with_runtime.lte"] = params.with_runtime_lte;
+    if (params.with_watch_providers) apiParams.with_watch_providers = params.with_watch_providers;
+    if (params.watch_region) apiParams.watch_region = params.watch_region;
+    if (params.with_watch_monetization_types) apiParams.with_watch_monetization_types = params.with_watch_monetization_types;
+    if (params.with_keywords) apiParams.with_keywords = params.with_keywords;
+
+    const response = await tmdbApi.get("/discover/tv", {
+      params: apiParams,
     });
     return response.data;
   },

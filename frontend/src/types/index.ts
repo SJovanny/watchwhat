@@ -294,3 +294,98 @@ export interface TMDBv4Account {
     };
   };
 }
+
+// Types pour les services de streaming
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
+  display_priority: number;
+}
+
+export interface WatchProvidersResponse {
+  results: {
+    [region: string]: {
+      link: string;
+      flatrate?: WatchProvider[];
+      rent?: WatchProvider[];
+      buy?: WatchProvider[];
+      free?: WatchProvider[];
+    };
+  };
+}
+
+// Types pour les certifications
+export interface Certification {
+  certification: string;
+  meaning: string;
+  order: number;
+}
+
+export interface CertificationsResponse {
+  certifications: {
+    [country: string]: Certification[];
+  };
+}
+
+// Types pour les langues
+export interface Language {
+  iso_639_1: string;
+  english_name: string;
+  name: string;
+}
+
+// Types pour les mots-clés
+export interface Keyword {
+  id: number;
+  name: string;
+}
+
+export interface KeywordSearchResponse {
+  page: number;
+  results: Keyword[];
+  total_pages: number;
+  total_results: number;
+}
+
+// Types pour les filtres unifiés
+export interface UnifiedFilterOptions {
+  // Type de média
+  mediaType: 'movie' | 'tv';
+  
+  // Tri
+  sortBy: string;
+  
+  // Services de streaming
+  watchProviders: number[];
+  watchRegion: string;
+  
+  // Disponibilités
+  monetizationTypes: ('flatrate' | 'free' | 'rent' | 'buy')[];
+  
+  // Dates
+  releaseDateFrom?: string;
+  releaseDateTo?: string;
+  
+  // Genres
+  genres: number[];
+  
+  // Certifications
+  certification?: string;
+  certificationCountry: string;
+  
+  // Langue
+  originalLanguage?: string;
+  
+  // Vote
+  voteAverageMin: number;
+  voteAverageMax: number;
+  voteCountMin: number;
+  
+  // Durée (en minutes)
+  runtimeMin?: number;
+  runtimeMax?: number;
+  
+  // Mots-clés
+  keywords: number[];
+}
