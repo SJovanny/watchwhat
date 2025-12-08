@@ -27,7 +27,6 @@ export default function Home() {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("day");
   const [topRatedSeries, setTopRatedSeries] = useState<Serie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const notify = useNotify();
 
   useEffect(() => {
@@ -93,26 +92,6 @@ export default function Home() {
         });
       }
       setTopRatedSeries(topSeries.slice(0, 12));
-
-      // Afficher l'onboarding si l'utilisateur est connecté mais n'a pas de préférences
-      if (user) {
-        try {
-          const [prefs, watchedSeries] = await Promise.all([
-            UserService.getPreferences(),
-            UserService.getWatchedSeries(),
-          ]);
-
-          if (
-            !prefs ||
-            (prefs.favoriteGenres.length === 0 &&
-              watchedSeries.length === 0)
-          ) {
-            setShowOnboarding(true);
-          }
-        } catch (error) {
-          console.error("Erreur lors du chargement des préférences:", error);
-        }
-      }
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
       notify.error("Erreur", "Impossible de charger les séries");
@@ -263,24 +242,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Call to action pour les nouveaux utilisateurs connectés */}
-        {user && showOnboarding && (
-          <section className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-8 text-center">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Personnalisez vos recommandations
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Configurez vos préférences pour recevoir des suggestions encore
-              plus précises
-            </p>
-            <button
-              onClick={() => (window.location.href = "/preferences")}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Configurer mes préférences
-            </button>
-          </section>
-        )}
 
         {/* Call to action pour les utilisateurs non connectés */}
         {!user && (

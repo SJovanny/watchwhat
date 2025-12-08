@@ -30,6 +30,7 @@ const tmdbApi = axios.create({
   },
   params: {
     language: "fr-FR",
+    region: "FR",
   },
 });
 
@@ -395,6 +396,64 @@ export const tmdbService = {
   // Mettre à jour la langue de l'API
   setLanguage(language: string) {
     tmdbApi.defaults.params.language = language;
+  },
+
+  // Mettre à jour la région pour le contenu (dates de sortie, disponibilités, etc.)
+  setRegion(region: string) {
+    tmdbApi.defaults.params.region = region;
+  },
+
+  // Obtenir la région actuelle
+  getRegion(): string {
+    return tmdbApi.defaults.params.region || "FR";
+  },
+
+  // Obtenir les films populaires filtrés par région (disponibles dans cette région)
+  async getPopularMoviesByRegion(page: number = 1): Promise<TMDBMovieResponse> {
+    const region = tmdbApi.defaults.params.region || "FR";
+    const response = await tmdbApi.get("/discover/movie", {
+      params: { 
+        page,
+        sort_by: "popularity.desc",
+        watch_region: region,
+        with_watch_monetization_types: "flatrate|free|ads|rent|buy",
+        "vote_count.gte": 50,
+      },
+    });
+    return response.data;
+  },
+
+  // Obtenir les séries populaires filtrées par région
+  async getPopularSeriesByRegion(page: number = 1): Promise<TMDBSearchResponse> {
+    const region = tmdbApi.defaults.params.region || "FR";
+    const response = await tmdbApi.get("/discover/tv", {
+      params: { 
+        page,
+        sort_by: "popularity.desc",
+        watch_region: region,
+        with_watch_monetization_types: "flatrate|free|ads|rent|buy",
+        "vote_count.gte": 50,
+      },
+    });
+    return response.data;
+  },
+
+  // Obtenir les films à venir dans une région spécifique
+  async getUpcomingMoviesByRegion(page: number = 1): Promise<TMDBMovieResponse> {
+    const region = tmdbApi.defaults.params.region || "FR";
+    const today = new Date().toISOString().split('T')[0];
+    const futureDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    const response = await tmdbApi.get("/discover/movie", {
+      params: { 
+        page,
+        sort_by: "popularity.desc",
+        region: region,
+        "primary_release_date.gte": today,
+        "primary_release_date.lte": futureDate,
+      },
+    });
+    return response.data;
   },
 
   // Obtenir les films similaires

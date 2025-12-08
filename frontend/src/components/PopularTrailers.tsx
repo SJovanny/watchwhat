@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import { Play, Calendar, Star, Film, X, Eye, Heart, Sparkles, TrendingUp, Zap, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, Calendar, Star, Film, X, Eye, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Movie, Serie, Video, SearchResult } from '@/types';
 import { tmdbService, getImageUrl } from '@/lib/tmdb';
+import { usePreferences } from '@/contexts/PreferencesContext';
 
 interface TrailerItem {
   content: Movie | Serie;
@@ -15,46 +16,41 @@ interface PopularTrailersProps {
 }
 
 export default function PopularTrailers({ className = '' }: PopularTrailersProps) {
+  const { preferences } = usePreferences();
   const [trailers, setTrailers] = useState<TrailerItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTrailer, setSelectedTrailer] = useState<TrailerItem | null>(null);
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
   const [backgroundTrailers, setBackgroundTrailers] = useState<TrailerItem[]>([]);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Gestion du scroll pour les boutons de navigation
-  const updateScrollButtons = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -400, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 400, behavior: 'smooth' });
-    }
-  };
-
-  // Mettre à jour les boutons après le chargement des trailers
+  // Gestion du scroll horizontal via la molette de la souris (desktop)
   useEffect(() => {
-    if (trailers.length > 0) {
-      setTimeout(updateScrollButtons, 100);
-    }
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Vérifier si on peut scroller horizontalement
+      const canScrollHorizontally = scrollContainer.scrollWidth > scrollContainer.clientWidth;
+      
+      if (canScrollHorizontally) {
+        e.preventDefault();
+        scrollContainer.scrollLeft += e.deltaY;
+      }
+    };
+
+    // Utiliser passive: false pour pouvoir appeler preventDefault
+    scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      scrollContainer.removeEventListener('wheel', handleWheel);
+    };
   }, [trailers]);
 
+  // Recharger les trailers quand la région change
   useEffect(() => {
     loadTrailers();
-  }, []);
+  }, [preferences?.country]);
 
   // Filtrer les trailers avec des arrière-plans valides pour les backgrounds
   useEffect(() => {
@@ -85,6 +81,10 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
       setIsLoading(true);
       
       // Charger un mélange équilibré de films et séries populaires et à venir
+      // Utilise les fonctions filtrées par région pour adapter le contenu
+      const region = tmdbService.getRegion();
+      console.log(`[PopularTrailers] Chargement du contenu pour la région: ${region}`);
+      
       const [
         popularMovies1, 
         popularMovies2, 
@@ -93,11 +93,11 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
         popularSeries2, 
         onTheAirSeries
       ] = await Promise.all([
-        tmdbService.getPopularMovies(1),
-        tmdbService.getPopularMovies(2),
-        tmdbService.getUpcomingMovies(1),
-        tmdbService.getPopularSeries(1),
-        tmdbService.getPopularSeries(2),
+        tmdbService.getPopularMoviesByRegion(1),
+        tmdbService.getPopularMoviesByRegion(2),
+        tmdbService.getUpcomingMoviesByRegion(1),
+        tmdbService.getPopularSeriesByRegion(1),
+        tmdbService.getPopularSeriesByRegion(2),
         tmdbService.getOnTheAirSeries(1)
       ]);
       
@@ -484,16 +484,19 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
                   <div className="flex items-center space-x-1">
                     <Eye className="h-4 w-4 text-blue-400" />
                     <span className="text-white font-bold text-sm">{trailers.length}</span>
+                    <span className="text-white/60 text-xs">trailers</span>
                   </div>
                   <div className="w-px h-4 bg-white/30"></div>
                   <div className="flex items-center space-x-1">
-                    <Award className="h-4 w-4 text-yellow-400" />
-                    <span className="text-white font-bold text-sm">4K</span>
+                    <Film className="h-4 w-4 text-purple-400" />
+                    <span className="text-white font-bold text-sm">{trailers.filter(t => 'title' in t.content).length}</span>
+                    <span className="text-white/60 text-xs">films</span>
                   </div>
                   <div className="w-px h-4 bg-white/30"></div>
                   <div className="flex items-center space-x-1">
-                    <Heart className="h-4 w-4 text-red-400 animate-pulse" />
-                    <span className="text-white font-bold text-sm">HD</span>
+                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    <span className="text-white font-bold text-sm">{trailers.filter(t => 'name' in t.content).length}</span>
+                    <span className="text-white/60 text-xs">séries</span>
                   </div>
                 </div>
               </div>
@@ -512,40 +515,9 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
 
           {/* Grid de trailers en format horizontal compact */}
           <div className="relative">
-            {/* Boutons de navigation pour desktop */}
-            {canScrollLeft && (
-              <button
-                onClick={scrollLeft}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 group"
-                aria-label="Trailers précédents"
-              >
-                <div className="relative">
-                  <div className="p-3 bg-gradient-to-br from-violet-600/90 to-purple-700/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl hover:from-violet-500 hover:to-purple-600 transition-all duration-300 group-hover:scale-110">
-                    <ChevronLeft className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
-                </div>
-              </button>
-            )}
-            {canScrollRight && (
-              <button
-                onClick={scrollRight}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 group"
-                aria-label="Trailers suivants"
-              >
-                <div className="relative">
-                  <div className="p-3 bg-gradient-to-br from-violet-600/90 to-purple-700/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl hover:from-violet-500 hover:to-purple-600 transition-all duration-300 group-hover:scale-110">
-                    <ChevronRight className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
-                </div>
-              </button>
-            )}
-            
             <div 
               ref={scrollContainerRef}
-              onScroll={updateScrollButtons}
-              className="overflow-x-auto scrollbar-hide scroll-smooth px-8"
+              className="overflow-x-auto scrollbar-hide scroll-smooth px-8 cursor-grab active:cursor-grabbing"
             >
               <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
                 {trailers.slice(0, 20).map((trailerItem, index) => (

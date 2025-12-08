@@ -268,7 +268,7 @@ interface Genre {
                     <div className="space-y-3">
                       <label className="flex items-center text-white font-medium">
                         <Languages className="h-5 w-5 mr-2" />
-                        Langue
+                        Langue de l'interface
                       </label>
                       <select
                         value={preferences.language}
@@ -279,32 +279,81 @@ interface Genre {
                         }}
                         className="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:border-purple-500 focus:outline-none"
                       >
-                        <option value="fr-FR" className="bg-gray-800 text-white">Français</option>
-                        <option value="en-US" className="bg-gray-800 text-white">English</option>
-                        <option value="es-ES" className="bg-gray-800 text-white">Español</option>
-                        <option value="de-DE" className="bg-gray-800 text-white">Deutsch</option>
+                        <option value="fr-FR" className="bg-gray-800 text-white">🇫🇷 Français</option>
+                        <option value="en-US" className="bg-gray-800 text-white">🇺🇸 English (US)</option>
+                        <option value="en-GB" className="bg-gray-800 text-white">🇬🇧 English (UK)</option>
+                        <option value="es-ES" className="bg-gray-800 text-white">🇪🇸 Español</option>
+                        <option value="de-DE" className="bg-gray-800 text-white">🇩🇪 Deutsch</option>
+                        <option value="it-IT" className="bg-gray-800 text-white">🇮🇹 Italiano</option>
+                        <option value="pt-BR" className="bg-gray-800 text-white">🇧🇷 Português (BR)</option>
+                        <option value="pt-PT" className="bg-gray-800 text-white">🇵🇹 Português (PT)</option>
+                        <option value="nl-NL" className="bg-gray-800 text-white">🇳🇱 Nederlands</option>
+                        <option value="ja-JP" className="bg-gray-800 text-white">🇯🇵 日本語</option>
+                        <option value="ko-KR" className="bg-gray-800 text-white">🇰🇷 한국어</option>
+                        <option value="zh-CN" className="bg-gray-800 text-white">🇨🇳 中文</option>
+                        <option value="ar-SA" className="bg-gray-800 text-white">🇸🇦 العربية</option>
                       </select>
+                      <p className="text-white/50 text-xs">Langue utilisée pour l'interface et les descriptions</p>
                     </div>
 
-                    {/* Pays */}
+                    {/* Pays / Région */}
                     <div className="space-y-3">
                       <label className="flex items-center text-white font-medium">
                         <Globe className="h-5 w-5 mr-2" />
-                        Pays
+                        Région du contenu
                       </label>
                       <select
                         value={preferences.country}
                         onChange={(e) => updatePreferences({ country: e.target.value })}
                         className="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:border-purple-500 focus:outline-none"
                       >
-                        <option value="FR">France</option>
-                        <option value="US">États-Unis</option>
-                        <option value="GB">Royaume-Uni</option>
-                        <option value="CA">Canada</option>
-                        <option value="DE">Allemagne</option>
-                        <option value="ES">Espagne</option>
-                        <option value="IT">Italie</option>
+                        <optgroup label="Europe" className="bg-gray-800 text-white">
+                          <option value="FR" className="bg-gray-800 text-white">🇫🇷 France</option>
+                          <option value="GB" className="bg-gray-800 text-white">🇬🇧 Royaume-Uni</option>
+                          <option value="DE" className="bg-gray-800 text-white">🇩🇪 Allemagne</option>
+                          <option value="ES" className="bg-gray-800 text-white">🇪🇸 Espagne</option>
+                          <option value="IT" className="bg-gray-800 text-white">🇮🇹 Italie</option>
+                          <option value="BE" className="bg-gray-800 text-white">🇧🇪 Belgique</option>
+                          <option value="CH" className="bg-gray-800 text-white">🇨🇭 Suisse</option>
+                          <option value="NL" className="bg-gray-800 text-white">🇳🇱 Pays-Bas</option>
+                          <option value="PT" className="bg-gray-800 text-white">🇵🇹 Portugal</option>
+                          <option value="AT" className="bg-gray-800 text-white">🇦🇹 Autriche</option>
+                          <option value="SE" className="bg-gray-800 text-white">🇸🇪 Suède</option>
+                          <option value="NO" className="bg-gray-800 text-white">🇳🇴 Norvège</option>
+                          <option value="DK" className="bg-gray-800 text-white">🇩🇰 Danemark</option>
+                          <option value="FI" className="bg-gray-800 text-white">🇫🇮 Finlande</option>
+                          <option value="PL" className="bg-gray-800 text-white">🇵🇱 Pologne</option>
+                          <option value="IE" className="bg-gray-800 text-white">🇮🇪 Irlande</option>
+                        </optgroup>
+                        <optgroup label="Amérique" className="bg-gray-800 text-white">
+                          <option value="US" className="bg-gray-800 text-white">🇺🇸 États-Unis</option>
+                          <option value="CA" className="bg-gray-800 text-white">🇨🇦 Canada</option>
+                          <option value="MX" className="bg-gray-800 text-white">🇲🇽 Mexique</option>
+                          <option value="BR" className="bg-gray-800 text-white">🇧🇷 Brésil</option>
+                          <option value="AR" className="bg-gray-800 text-white">🇦🇷 Argentine</option>
+                          <option value="CO" className="bg-gray-800 text-white">🇨🇴 Colombie</option>
+                          <option value="CL" className="bg-gray-800 text-white">🇨🇱 Chili</option>
+                        </optgroup>
+                        <optgroup label="Asie & Océanie" className="bg-gray-800 text-white">
+                          <option value="JP" className="bg-gray-800 text-white">🇯🇵 Japon</option>
+                          <option value="KR" className="bg-gray-800 text-white">🇰🇷 Corée du Sud</option>
+                          <option value="CN" className="bg-gray-800 text-white">🇨🇳 Chine</option>
+                          <option value="IN" className="bg-gray-800 text-white">🇮🇳 Inde</option>
+                          <option value="AU" className="bg-gray-800 text-white">🇦🇺 Australie</option>
+                          <option value="NZ" className="bg-gray-800 text-white">🇳🇿 Nouvelle-Zélande</option>
+                          <option value="SG" className="bg-gray-800 text-white">🇸🇬 Singapour</option>
+                          <option value="HK" className="bg-gray-800 text-white">🇭🇰 Hong Kong</option>
+                        </optgroup>
+                        <optgroup label="Afrique & Moyen-Orient" className="bg-gray-800 text-white">
+                          <option value="ZA" className="bg-gray-800 text-white">🇿🇦 Afrique du Sud</option>
+                          <option value="MA" className="bg-gray-800 text-white">🇲🇦 Maroc</option>
+                          <option value="EG" className="bg-gray-800 text-white">🇪🇬 Égypte</option>
+                          <option value="SA" className="bg-gray-800 text-white">🇸🇦 Arabie Saoudite</option>
+                          <option value="AE" className="bg-gray-800 text-white">🇦🇪 Émirats arabes unis</option>
+                          <option value="IL" className="bg-gray-800 text-white">🇮🇱 Israël</option>
+                        </optgroup>
                       </select>
+                      <p className="text-white/50 text-xs">Adapte les tendances, dates de sortie et disponibilités</p>
                     </div>
                   </div>
 

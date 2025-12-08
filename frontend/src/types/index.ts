@@ -251,6 +251,7 @@ export interface UserPreferences {
   preferredLanguages: string[];
   favoriteGenres: number[];
   dislikedGenres: number[];
+  favoriteActors: number[];  // IDs TMDB des acteurs favoris
   favoriteSeries: Serie[];
   notificationsEnabled: boolean;
   autoAddToWatchlist: boolean;

@@ -25,23 +25,25 @@ export default function PopularMovies({ className = '' }: PopularMoviesProps) {
   const loadPopularMovies = async () => {
     try {
       setIsLoading(true);
+      const region = tmdbService.getRegion();
+      console.log(`[PopularMovies] Chargement des films pour la région: ${region}`);
+      
       let results: Movie[] = [];
 
       if (preferences) {
         // Obtenir des résultats filtrés si les préférences existent
-        const response = await tmdbService.discoverAll({
-          media_type: 'movie',
+        const response = await tmdbService.discoverMovies({
           sort_by: 'popularity.desc',
           page: 1,
+          watch_region: preferences.country,
           without_genres: preferences.dislikedGenres.length > 0 ? preferences.dislikedGenres.join(',') : undefined,
           vote_average_gte: preferences.minRating > 0 ? preferences.minRating : undefined,
-          // Nous n'utilisons pas include_adult ici car l'API de découverte a ses propres règles, 
-          // mais le filtrage client peut être ajouté si nécessaire.
+          vote_count_gte: 50,
         });
         results = (response.results || []) as Movie[];
       } else {
-        // Fallback standard
-        const response = await tmdbService.getPopularMovies(1);
+        // Fallback avec filtrage par région
+        const response = await tmdbService.getPopularMoviesByRegion(1);
         results = response.results;
       }
 

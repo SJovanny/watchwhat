@@ -13,6 +13,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   userId: '',
   favoriteGenres: [],
   dislikedGenres: [],
+  favoriteActors: [],
   favoriteSeries: [],
   preferredLanguages: ['fr', 'en'],
   notificationsEnabled: true,

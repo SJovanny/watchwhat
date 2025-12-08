@@ -201,6 +201,42 @@ export default function TrendingCarousel({
     handleMouseUp();
   };
 
+  // Gestion du scroll horizontal via la molette de la souris (desktop)
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (isPlaying) return;
+      
+      const canScrollHorizontally = series.length > itemsPerView;
+      
+      if (canScrollHorizontally) {
+        e.preventDefault();
+        
+        const cardWidth = carousel.offsetWidth / itemsPerView;
+        const maxScroll = (series.length - itemsPerView) * cardWidth;
+        
+        // Calculer la nouvelle position basée sur le delta de la molette
+        const newPosition = Math.max(0, Math.min(scrollPosition + e.deltaY, maxScroll));
+        setScrollPosition(newPosition);
+        
+        // Mettre à jour l'index basé sur la position
+        const newIndex = Math.round(newPosition / cardWidth);
+        if (newIndex !== currentIndex && newIndex >= 0 && newIndex <= maxIndex) {
+          setCurrentIndex(newIndex);
+        }
+      }
+    };
+
+    // Utiliser passive: false pour pouvoir appeler preventDefault
+    carousel.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      carousel.removeEventListener('wheel', handleWheel);
+    };
+  }, [isPlaying, series.length, itemsPerView, scrollPosition, currentIndex, maxIndex]);
+
   if (series.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
@@ -255,7 +291,7 @@ export default function TrendingCarousel({
       {/* Carrousel */}
       <div 
         ref={carouselRef}
-        className="overflow-hidden rounded-lg"
+        className="overflow-hidden rounded-lg cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}

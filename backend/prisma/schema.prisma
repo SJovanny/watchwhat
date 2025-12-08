@@ -35,10 +35,33 @@ model User {
 model UserPreferences {
   id               String @id @default(cuid())
   userId           String @unique
-  favoriteGenres   Int[]  // Array of TMDB genre IDs
-  favoriteActors   Int[]  // Array of TMDB person IDs
-  minRating        Float  @default(7.0)
-  preferredLanguage String @default("fr-FR")
+  
+  // Général
+  language         String @default("fr-FR")      // Langue de l'interface (ex: fr-FR, en-US)
+  country          String @default("FR")          // Région du contenu (ex: FR, US, JP)
+  includeAdult     Boolean @default(false)        // Contenu pour adultes
+  
+  // Contenu
+  favoriteGenres   Int[]  @default([])            // Genres préférés (IDs TMDB)
+  dislikedGenres   Int[]  @default([])            // Genres à éviter (IDs TMDB)
+  favoriteActors   Int[]  @default([])            // Acteurs préférés (IDs TMDB)
+  minRating        Float  @default(0)             // Note minimum
+  maxRating        Float  @default(10)            // Note maximum
+  releaseYearFrom  Int?                           // Année de sortie depuis
+  releaseYearTo    Int?                           // Année de sortie jusqu'à
+  
+  // Affichage
+  theme            String @default("auto")        // Thème: light, dark, auto
+  defaultView      String @default("grid")        // Vue: grid, list
+  itemsPerPage     Int    @default(20)            // Éléments par page
+  autoplay         Boolean @default(true)         // Lecture auto des trailers
+  showSpoilers     Boolean @default(false)        // Afficher les spoilers
+  
+  // Notifications (stockées en JSON)
+  notifications    Json   @default("{\"newReleases\":true,\"recommendations\":true,\"watchlistUpdates\":true}")
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

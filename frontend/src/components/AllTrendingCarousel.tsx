@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { SearchResult } from '@/types';
 import ContentCard from './ContentCard';
 
@@ -15,6 +15,30 @@ export default function AllTrendingCarousel({
   onContentClick, 
   className = '' 
 }: AllTrendingCarouselProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Gestion du scroll horizontal via la molette de la souris
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Vérifier si on peut scroller horizontalement
+      const canScrollHorizontally = scrollContainer.scrollWidth > scrollContainer.clientWidth;
+      
+      if (canScrollHorizontally) {
+        e.preventDefault();
+        scrollContainer.scrollLeft += e.deltaY;
+      }
+    };
+
+    // Utiliser passive: false pour pouvoir appeler preventDefault
+    scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      scrollContainer.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   if (content.length === 0) {
     return (
@@ -32,7 +56,8 @@ export default function AllTrendingCarousel({
     <div className={`relative ${className}`}>
       {/* Carousel container avec défilement horizontal natif */}
       <div 
-        className="overflow-x-auto overflow-y-hidden scrollbar-hide scroll-smooth pb-4"
+        ref={scrollContainerRef}
+        className="overflow-x-auto overflow-y-hidden scrollbar-hide scroll-smooth pb-4 cursor-grab active:cursor-grabbing"
         style={{ 
           scrollbarWidth: 'none',
           msOverflowStyle: 'none'
