@@ -16,7 +16,7 @@ interface PopularTrailersProps {
 }
 
 export default function PopularTrailers({ className = '' }: PopularTrailersProps) {
-  const { preferences } = usePreferences();
+  const { preferences, isLoading: isPrefsLoading } = usePreferences();
   const [trailers, setTrailers] = useState<TrailerItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTrailer, setSelectedTrailer] = useState<TrailerItem | null>(null);
@@ -49,8 +49,11 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
 
   // Recharger les trailers quand la région change
   useEffect(() => {
-    loadTrailers();
-  }, [preferences?.country]);
+    // Attendre que les préférences soient chargées
+    if (!isPrefsLoading) {
+      loadTrailers();
+    }
+  }, [preferences?.country, isPrefsLoading]);
 
   // Filtrer les trailers avec des arrière-plans valides pour les backgrounds
   useEffect(() => {

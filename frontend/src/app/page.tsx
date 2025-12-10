@@ -23,7 +23,7 @@ type TimeWindow = "day" | "week";
 export default function Home() {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { preferences } = usePreferences();
+  const { preferences, isLoading: isPrefsLoading } = usePreferences();
   const [trendingContent, setTrendingContent] = useState<SearchResult[]>([]);
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("day");
   const [topRatedSeries, setTopRatedSeries] = useState<Serie[]>([]);
@@ -31,8 +31,11 @@ export default function Home() {
   const notify = useNotify();
 
   useEffect(() => {
-    loadData();
-  }, [timeWindow, user, preferences]);
+    // Attendre que les préférences soient chargées avant de charger les données
+    if (!isPrefsLoading) {
+      loadData();
+    }
+  }, [timeWindow, user, preferences, isPrefsLoading]);
 
   const loadData = async () => {
     try {

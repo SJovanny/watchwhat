@@ -14,13 +14,16 @@ interface PopularMoviesProps {
 
 export default function PopularMovies({ className = '' }: PopularMoviesProps) {
   const { t } = useLanguage();
-  const { preferences } = usePreferences();
+  const { preferences, isLoading: isPrefsLoading } = usePreferences();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadPopularMovies();
-  }, [preferences]);
+    // Attendre que les préférences soient chargées
+    if (!isPrefsLoading) {
+      loadPopularMovies();
+    }
+  }, [preferences, isPrefsLoading]);
 
   const loadPopularMovies = async () => {
     try {

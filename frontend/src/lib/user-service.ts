@@ -586,11 +586,16 @@ export class UserService {
       } = await supabase.auth.getUser();
       if (!user) return null;
 
+      console.log('[UserService] getPreferences - Fetching for user:', user.id);
+      
       const { data, error } = await supabase
         .from("user_preferences")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      console.log('[UserService] getPreferences - Raw data from DB:', data);
+      console.log('[UserService] getPreferences - Country value:', data?.country);
 
       if (error) {
         console.error("Erreur lors de la récupération des préférences:", error);
@@ -639,7 +644,7 @@ export class UserService {
         updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
       };
 
-      console.log('[UserService] Préférences chargées depuis BDD:', prefs);
+      console.log('[UserService] Préférences chargées depuis BDD:', { country: prefs.country, language: prefs.language });
       return prefs;
     } catch (error) {
       console.error("Erreur lors de la récupération des préférences:", error);

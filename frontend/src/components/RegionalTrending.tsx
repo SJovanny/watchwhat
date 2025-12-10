@@ -45,13 +45,16 @@ interface RegionalTrendingProps {
 }
 
 export default function RegionalTrending({ onContentClick, className = '' }: RegionalTrendingProps) {
-  const { preferences } = usePreferences();
+  const { preferences, isLoading: isPrefsLoading } = usePreferences();
   const [content, setContent] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadRegionalContent();
-  }, [preferences?.country]);
+    // Attendre que les préférences soient chargées avant de charger le contenu
+    if (!isPrefsLoading && preferences?.country) {
+      loadRegionalContent();
+    }
+  }, [preferences?.country, isPrefsLoading]);
 
   const loadRegionalContent = async () => {
     try {
