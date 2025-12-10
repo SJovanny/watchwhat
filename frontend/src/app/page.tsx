@@ -7,6 +7,7 @@ import SerieCard from "@/components/SerieCard";
 import AllTrendingCarousel from "@/components/AllTrendingCarousel";
 import PopularTrailers from "@/components/PopularTrailers";
 import PopularMovies from "@/components/PopularMovies";
+import RegionalTrending from "@/components/RegionalTrending";
 import LoginButton from "@/components/LoginButton";
 import HeroSection from "@/components/HeroSection";
 import { Serie, SearchResult } from "@/types";
@@ -209,6 +210,14 @@ export default function Home() {
             onContentClick={handleContentSelect}
           />
         </section>
+
+        {/* Regional Trending Section - Only for logged-in users */}
+        {user && (
+          <RegionalTrending
+            onContentClick={handleContentSelect}
+            className="mb-12"
+          />
+        )}
 
         {/* Popular Trailers Section */}
         <PopularTrailers className="mb-12" />

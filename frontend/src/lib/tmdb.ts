@@ -438,6 +438,56 @@ export const tmdbService = {
     return response.data;
   },
 
+  // Obtenir le contenu populaire filtré par pays d'origine (films + séries produits dans ce pays)
+  async getTrendingByRegion(page: number = 1): Promise<TMDBMultiSearchResponse> {
+    const region = tmdbApi.defaults.params.region || "FR";
+    
+    console.log(`[TMDB] Fetching content from origin country: ${region}`);
+    
+    const [moviesResponse, seriesResponse] = await Promise.all([
+      tmdbApi.get("/discover/movie", {
+        params: {
+          page,
+          sort_by: "popularity.desc",
+          with_origin_country: region, // Films produits dans ce pays
+          "vote_count.gte": 10,
+        },
+      }),
+      tmdbApi.get("/discover/tv", {
+        params: {
+          page,
+          sort_by: "popularity.desc",
+          with_origin_country: region, // Séries produites dans ce pays
+          "vote_count.gte": 10,
+        },
+      }),
+    ]);
+
+    // Combiner films et séries avec leur media_type
+    const movies = (moviesResponse.data.results || []).map((m: any) => ({
+      ...m,
+      media_type: 'movie' as const,
+    }));
+    const series = (seriesResponse.data.results || []).map((s: any) => ({
+      ...s,
+      media_type: 'tv' as const,
+    }));
+
+    // Mélanger et trier par popularité
+    const combined = [...movies, ...series].sort(
+      (a, b) => b.popularity - a.popularity
+    );
+
+    console.log(`[TMDB] Found ${movies.length} movies and ${series.length} series from ${region}`);
+
+    return {
+      page,
+      results: combined.slice(0, 20),
+      total_pages: Math.max(moviesResponse.data.total_pages || 1, seriesResponse.data.total_pages || 1),
+      total_results: combined.length,
+    };
+  },
+
   // Obtenir les films à venir dans une région spécifique
   async getUpcomingMoviesByRegion(page: number = 1): Promise<TMDBMovieResponse> {
     const region = tmdbApi.defaults.params.region || "FR";

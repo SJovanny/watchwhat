@@ -560,7 +560,8 @@ export class UserService {
           message: error.message,
           details: error.details,
           hint: error.hint,
-          code: error.code
+          code: error.code,
+          fullError: JSON.stringify(error, null, 2)
         });
         throw error;
       }
@@ -572,7 +573,7 @@ export class UserService {
         details: error?.details,
         hint: error?.hint,
         code: error?.code,
-        full: error
+        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error || {}), 2)
       });
       return false;
     }
