@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="WatchWhat">
+  <defs>
+    <linearGradient id="ww-red" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#9333ea"/>
+    </linearGradient>
+    <linearGradient id="ww-light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d9dde5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- film cassette body -->
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="#0a0a0a"/>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="none" stroke="#2a2a2e" stroke-width="3"/>
+
+  <!-- film sprocket holes -->
+  <g fill="#26262b">
+    <rect x="22" y="40" width="14" height="20" rx="4"/>
+    <rect x="22" y="78" width="14" height="20" rx="4"/>
+    <rect x="22" y="116" width="14" height="20" rx="4"/>
+    <rect x="22" y="154" width="14" height="20" rx="4"/>
+    <rect x="22" y="192" width="14" height="20" rx="4"/>
+    <rect x="220" y="40" width="14" height="20" rx="4"/>
+    <rect x="220" y="78" width="14" height="20" rx="4"/>
+    <rect x="220" y="116" width="14" height="20" rx="4"/>
+    <rect x="220" y="154" width="14" height="20" rx="4"/>
+    <rect x="220" y="192" width="14" height="20" rx="4"/>
+  </g>
+
+  <!-- film frame window -->
+  <rect x="46" y="52" width="164" height="152" rx="14" fill="#141417"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- first W (red) -->
+    <path d="M62 80 L82 176 L102 112 L122 176 L142 80" stroke="url(#ww-red)" stroke-width="13"/>
+    <!-- second W (light) slides into the first; dark casing separates them -->
+    <path d="M114 80 L134 176 L154 112 L174 176 L194 80" stroke="#141417" stroke-width="21"/>
+    <path d="M114 80 L134 176 L154 112 L174 176 L194 80" stroke="url(#ww-light)" stroke-width="13"/>
+    <!-- weave: red passes back over white at the second crossing -->
+    <path d="M128 150 L142 80" stroke="#141417" stroke-width="21"/>
+    <path d="M128 150 L142 80" stroke="url(#ww-red)" stroke-width="13"/>
+  </g>
+</svg>
