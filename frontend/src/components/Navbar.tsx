@@ -45,10 +45,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <img src="/logo.svg" alt="WatchWhat" className="w-9 h-9" />
-            <span className="font-bold text-xl text-gray-900 dark:text-white">
-              WatchWhat
-            </span>
+            <img src="/logo.svg" alt="WatchWhat" className="w-10 h-10" />
           </Link>
 
           {/* Navigation Desktop */}
