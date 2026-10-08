@@ -53,15 +53,25 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       setIsLoading(true);
       
       // Vérifier si l'utilisateur est connecté
-      const { data: { user } } = await supabase.auth.getUser();
+      // Timeout: si Supabase ne répond pas, on retombe sur les valeurs par défaut
+      // plutôt que de laisser les pages (ex: settings) en chargement infini
+      const withTimeout = <T,>(promise: Promise<T>, fallback: T, ms = 8000) =>
+        Promise.race([
+          promise,
+          new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+        ]);
+
+      const { data: { user } } = await withTimeout(
+        supabase.auth.getUser(),
+        { data: { user: null } } as Awaited<ReturnType<typeof supabase.auth.getUser>>
+      );
       setIsAuthenticated(!!user);
       
       let prefs: UserPreferences | null = null;
       
       if (user) {
         // Utilisateur connecté: charger depuis Supabase
-        prefs = await UserService.getPreferences();
-        console.log('[PreferencesContext] Préférences chargées depuis Supabase:', prefs);
+        prefs = await withTimeout(UserService.getPreferences(), null);
       } else {
         // Utilisateur non connecté: utiliser le localStorage comme fallback
         const stored = localStorage.getItem("user_preferences");
@@ -102,10 +112,10 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     loadPreferences();
 
     // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[PreferencesContext] Auth state changed:', event);
+    // Callback non-async + setTimeout: appeler Supabase dans ce callback bloque (verrou d'auth)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        await loadPreferences();
+        setTimeout(() => void loadPreferences(), 0);
       }
     });
 

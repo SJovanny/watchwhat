@@ -35,7 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Charger l'utilisateur initial
     const loadUser = async () => {
       try {
-        const currentUser = await UserService.getCurrentUser();
+        // Timeout: ne jamais laisser l'app en chargement infini si Supabase ne répond pas
+        const currentUser = await Promise.race([
+          UserService.getCurrentUser(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+        ]);
         setUser(currentUser);
       } catch (error) {
         console.error("Erreur lors du chargement de l'utilisateur:", error);
@@ -49,7 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Écouter les changements d'authentification
     const {
       data: { subscription },
-    } = UserService.onAuthStateChange(async (authUser) => {
+    } = UserService.onAuthStateChange((authUser) => {
+      // Ne jamais attendre d'appel Supabase directement dans ce callback: supabase-js
+      // le fait tourner sous le verrou d'auth, donc un getUser() ici bloque indéfiniment.
+      setTimeout(() => void handleAuthChange(authUser), 0);
+    });
+
+    const handleAuthChange = async (authUser: any) => {
       if (authUser) {
         // Synchroniser l'utilisateur dans public.users si nécessaire (important pour Google OAuth)
         await UserService.syncUserAfterLogin(authUser.id);
@@ -89,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
       setLoading(false);
-    });
+    };
 
     return () => subscription.unsubscribe();
   }, [isHydrated]);

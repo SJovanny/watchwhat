@@ -290,7 +290,8 @@ export class UserService {
         serie_data: serie,
       });
 
-      if (error) throw error;
+      // 23505 = déjà présente: l'état voulu est atteint
+      if (error && error.code !== "23505") throw error;
       return true;
     } catch (error) {
       console.error("Erreur lors de l'ajout à la watchlist:", error);
@@ -401,7 +402,10 @@ export class UserService {
           }
 
           if (episodeNumbers) {
-            episodesWatched[seasonNumber.toString()] = episodeNumbers;
+            const key = seasonNumber.toString();
+            episodesWatched[key] = Array.from(
+              new Set([...(episodesWatched[key] || []), ...episodeNumbers])
+            );
           }
         }
 
@@ -435,6 +439,13 @@ export class UserService {
 
         if (error) throw error;
       }
+
+      // Le trigger ne couvre que l'INSERT: on retire aussi explicitement après un UPDATE
+      await supabase
+        .from("watchlist_items")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("serie_id", serie.id);
       return true;
     } catch (error) {
       console.error("Erreur lors du marquage comme vu:", error);
@@ -549,9 +560,7 @@ export class UserService {
       if (preferences.showSpoilers !== undefined) updateData.show_spoilers = preferences.showSpoilers;
       if (preferences.notifications !== undefined) updateData.notifications = preferences.notifications;
 
-      console.log('[UserService] Tentative upsert avec:', updateData);
-      
-      const { data, error } = await supabase.from("user_preferences").upsert(updateData, {
+      const { error } = await supabase.from("user_preferences").upsert(updateData, {
         onConflict: 'user_id'
       });
 
@@ -564,7 +573,6 @@ export class UserService {
         });
         throw error;
       }
-      console.log('[UserService] Préférences sauvegardées en BDD:', data);
       return true;
     } catch (error: any) {
       console.error("Erreur lors de la mise à jour des préférences:", {
@@ -638,7 +646,6 @@ export class UserService {
         updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
       };
 
-      console.log('[UserService] Préférences chargées depuis BDD:', prefs);
       return prefs;
     } catch (error) {
       console.error("Erreur lors de la récupération des préférences:", error);
@@ -783,7 +790,7 @@ export class UserService {
         movie_data: movie,
       });
 
-      if (error) throw error;
+      if (error && error.code !== "23505") throw error;
       return true;
     } catch (error) {
       console.error("Erreur lors de l'ajout du film à la watchlist:", error);
@@ -871,6 +878,13 @@ export class UserService {
         }
       }
 
+      // Le trigger ne couvre que l'INSERT: on retire aussi explicitement après un UPDATE
+      await supabase
+        .from("watchlist_movies")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("movie_id", movie.id);
+
       return true;
     } catch (error) {
       console.error("Erreur lors du marquage du film comme vu:", error);
@@ -926,6 +940,48 @@ export class UserService {
     } catch (error) {
       console.error("Erreur lors de la récupération des films vus:", error);
       return [];
+    }
+  }
+
+  // Charger en une fois les IDs de toutes les listes de l'utilisateur
+  static async getUserListIds(): Promise<{
+    watchlistSeries: number[];
+    watchedSeries: number[];
+    watchlistMovies: number[];
+    watchedMovies: number[];
+  }> {
+    const empty = {
+      watchlistSeries: [],
+      watchedSeries: [],
+      watchlistMovies: [],
+      watchedMovies: [],
+    };
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return empty;
+
+      const ids = async (table: string, column: string): Promise<number[]> => {
+        const { data, error } = await supabase
+          .from(table)
+          .select(column)
+          .eq("user_id", user.id);
+        if (error) throw error;
+        return ((data as any[]) || []).map((row) => row[column]);
+      };
+
+      const [watchlistSeries, watchedSeries, watchlistMovies, watchedMovies] =
+        await Promise.all([
+          ids("watchlist_items", "serie_id"),
+          ids("watched_series", "serie_id"),
+          ids("watchlist_movies", "movie_id"),
+          ids("watched_movies", "movie_id"),
+        ]);
+      return { watchlistSeries, watchedSeries, watchlistMovies, watchedMovies };
+    } catch (error) {
+      console.error("Erreur lors du chargement des listes:", error);
+      return empty;
     }
   }
 

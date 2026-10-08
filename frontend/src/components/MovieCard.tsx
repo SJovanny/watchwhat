@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { Star, Calendar, Film, Heart, Plus, Check } from "lucide-react";
 import { Movie } from "@/types";
@@ -11,9 +11,8 @@ import {
   getRatingColor,
   handleImageError,
 } from "@/lib/utils";
-import { UserService } from "@/lib/user-service";
 import { useAuth } from "./AuthProvider";
-import { useNotify } from "./NotificationProvider";
+import { useUserLists } from "@/contexts/UserListsContext";
 
 interface MovieCardProps {
   movie: Movie;
@@ -29,113 +28,19 @@ export default function MovieCard({
   className = "",
 }: MovieCardProps) {
   const { user } = useAuth();
-  const notify = useNotify();
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
-  const [isWatched, setIsWatched] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const lists = useUserLists();
+  const isInWatchlist = lists.isInWatchlist("movie", movie.id);
+  const isWatched = lists.isWatched("movie", movie.id);
+  const loading = lists.isBusy("movie", movie.id);
 
-  // Charger l'état initial
-  useEffect(() => {
-    if (user) {
-      loadMovieStatus();
-    }
-  }, [user, movie.id]);
-
-  const loadMovieStatus = async () => {
-    if (!user) return;
-
-    try {
-      const [watchlistStatus, watchedStatus] = await Promise.all([
-        UserService.isMovieInWatchlist(movie.id),
-        UserService.isMovieWatched(movie.id),
-      ]);
-
-      setIsInWatchlist(watchlistStatus);
-      setIsWatched(watchedStatus);
-    } catch (error) {
-      console.error("Erreur lors du chargement du statut du film:", error);
-    }
+  const handleWatchlistToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    lists.toggleWatchlist("movie", movie);
   };
 
-  const handleWatchlistToggle = async (e: React.MouseEvent) => {
+  const handleMarkAsWatched = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    if (!user) {
-      notify.info(
-        "Connexion requise",
-        "Connectez-vous pour gérer votre watchlist"
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (isInWatchlist) {
-        const success = await UserService.removeMovieFromWatchlist(movie.id);
-        if (success) {
-          setIsInWatchlist(false);
-          notify.success(
-            "Retiré de la watchlist",
-            `"${movie.title}" a été retiré de votre watchlist`
-          );
-        }
-      } else {
-        const success = await UserService.addMovieToWatchlist(movie);
-        if (success) {
-          setIsInWatchlist(true);
-          notify.success(
-            "Ajouté à la watchlist",
-            `"${movie.title}" a été ajouté à votre watchlist`
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la gestion de la watchlist:", error);
-      notify.error(
-        "Erreur",
-        "Une erreur est survenue lors de la mise à jour de votre watchlist"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMarkAsWatched = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    if (!user) {
-      notify.info(
-        "Connexion requise",
-        "Connectez-vous pour marquer des films comme vus"
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const success = await UserService.markMovieAsWatched(movie);
-      if (success) {
-        setIsWatched(true);
-        // Le trigger PostgreSQL retire automatiquement de la watchlist
-        setIsInWatchlist(false);
-        notify.success(
-          "Marqué comme vu",
-          `"${movie.title}" a été ajouté à vos films vus`,
-          {
-            label: "Voir mes films vus",
-            onClick: () => (window.location.href = "/profile"),
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Erreur lors du marquage comme vu:", error);
-      notify.error(
-        "Erreur",
-        "Une erreur est survenue lors du marquage du film"
-      );
-    } finally {
-      setLoading(false);
-    }
+    lists.markWatched("movie", movie);
   };
 
   const handleClick = () => {

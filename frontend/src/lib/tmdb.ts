@@ -25,6 +25,7 @@ const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 // Configuration de l'API TMDB
 const tmdbApi = axios.create({
   baseURL: TMDB_BASE_URL,
+  timeout: 15000,
   headers: {
     Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_READ_ACCESS_TOKEN}`,
   },

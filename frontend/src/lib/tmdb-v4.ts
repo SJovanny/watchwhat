@@ -190,8 +190,9 @@ export const tmdbV4Service = {
           }
         };
         
-        // Sauvegarder les préférences par défaut
-        this.saveUserPreferences(defaultPreferences);
+        // Persister directement: passer par saveUserPreferences (qui relit les
+        // préférences) provoquerait une récursion infinie quand le stockage est vide
+        localStorage.setItem('user_preferences', JSON.stringify(defaultPreferences));
         return defaultPreferences;
       }
       

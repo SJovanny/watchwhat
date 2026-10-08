@@ -8,7 +8,6 @@ import SerieCard from '@/components/SerieCard';
 import MovieCard from '@/components/MovieCard';
 import { Serie, SearchResult, Movie } from '@/types';
 import { tmdbService } from '@/lib/tmdb';
-import { storageService } from '@/lib/storage';
 import { useNotify } from '@/components/NotificationProvider';
 import { formatDateToYear, formatRating } from '@/lib/utils';
 
@@ -112,14 +111,6 @@ function SearchContent() {
   const handleSerieClick = useCallback((serie: Serie) => {
     window.location.href = `/serie/${serie.id}`;
   }, []);
-
-  const handleAddToWatched = useCallback((serie: Serie) => {
-    storageService.addWatchedSerie(serie);
-    notify.success(
-      'Série ajoutée !',
-      `"${serie.name}" a été ajoutée à votre liste des séries vues`
-    );
-  }, [notify]);
 
   const loadMore = () => {
     if (!isLoading && hasMore && query) {

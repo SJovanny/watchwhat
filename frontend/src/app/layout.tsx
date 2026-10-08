@@ -7,6 +7,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
+import { UserListsProvider } from "@/contexts/UserListsContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -72,10 +73,12 @@ export default function RootLayout({
             <PreferencesProvider>
               <AuthProvider>
                 <NotificationProvider>
-                  <Navbar />
-                  <main className="pt-16">
-                    {children}
-                  </main>
+                  <UserListsProvider>
+                    <Navbar />
+                    <main className="pt-16">
+                      {children}
+                    </main>
+                  </UserListsProvider>
                 </NotificationProvider>
               </AuthProvider>
             </PreferencesProvider>

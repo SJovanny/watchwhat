@@ -16,14 +16,15 @@ import {
   Info,
   PlayCircle,
   Check,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { SerieDetails, Video, Cast, Crew } from "@/types";
 import { tmdbService, getImageUrl, getBackdropUrl } from "@/lib/tmdb";
 import { useFavoriteSeries } from "@/lib/storage";
 import { formatDateToYear, formatRating, getRatingColor } from "@/lib/utils";
-import { UserService } from "@/lib/user-service";
+import { useUserLists } from "@/contexts/UserListsContext";
 import { useAuth } from "@/components/AuthProvider";
-import { useNotify } from "@/components/NotificationProvider";
 import SerieCard from "@/components/SerieCard";
 
 export default function SeriePage() {
@@ -31,7 +32,6 @@ export default function SeriePage() {
   const router = useRouter();
   const serieId = parseInt(params.id as string);
   const { user } = useAuth();
-  const notify = useNotify();
 
   const [serie, setSerie] = useState<SerieDetails | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -40,9 +40,10 @@ export default function SeriePage() {
   const [error, setError] = useState<string | null>(null);
   const [showTrailer, setShowTrailer] = useState(false);
   const [mainTrailer, setMainTrailer] = useState<Video | null>(null);
-  const [isWatched, setIsWatched] = useState(false);
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const lists = useUserLists();
+  const isWatched = lists.isWatched("serie", serieId);
+  const isInWatchlist = lists.isInWatchlist("serie", serieId);
+  const loading = lists.isBusy("serie", serieId);
 
   const { addFavoriteSerie, removeFavoriteSerie, isFavorite } =
     useFavoriteSeries();
@@ -79,15 +80,6 @@ export default function SeriePage() {
 
         setMainTrailer(trailer || null);
 
-        // Charger le statut de la série (vu/watchlist) si l'utilisateur est connecté
-        if (user) {
-          const [watchedStatus, watchlistStatus] = await Promise.all([
-            UserService.isWatched(serieId),
-            UserService.isInWatchlist(serieId),
-          ]);
-          setIsWatched(watchedStatus);
-          setIsInWatchlist(watchlistStatus);
-        }
       } catch (err) {
         console.error("Erreur lors du chargement de la série:", err);
         setError("Impossible de charger les détails de la série");
@@ -111,48 +103,15 @@ export default function SeriePage() {
     }
   };
 
-  const handleMarkAsWatched = async () => {
-    if (!serie || !user) {
-      notify.info(
-        "Connexion requise",
-        "Connectez-vous pour marquer des séries comme vues"
-      );
-      return;
-    }
+  const handleMarkAsWatched = () => {
+    if (!serie) return;
+    if (isWatched) lists.unmarkWatched("serie", serie);
+    else lists.markWatched("serie", serie);
+  };
 
-    setLoading(true);
-    try {
-      if (isWatched) {
-        // Option pour retirer de "vu" si nécessaire
-        notify.info(
-          "Déjà marquée comme vue",
-          `"${serie.name}" est déjà dans vos séries vues`
-        );
-      } else {
-        const success = await UserService.markAsWatched(serie);
-        if (success) {
-          setIsWatched(true);
-          // Le trigger PostgreSQL retire automatiquement de la watchlist
-          setIsInWatchlist(false);
-          notify.success(
-            "Marqué comme vu",
-            `"${serie.name}" a été ajouté à vos séries vues`,
-            {
-              label: "Voir mes séries vues",
-              onClick: () => router.push("/profile"),
-            }
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors du marquage comme vu:", error);
-      notify.error(
-        "Erreur",
-        "Une erreur est survenue lors du marquage de la série"
-      );
-    } finally {
-      setLoading(false);
-    }
+  const handleWatchlistToggle = () => {
+    if (!serie) return;
+    lists.toggleWatchlist("serie", serie);
   };
 
   const handleSerieSelect = (selectedSerie: any) => {
@@ -320,6 +279,21 @@ export default function SeriePage() {
                       </button>
                     )}
 
+                    {user && !isWatched && (
+                      <button
+                        onClick={handleWatchlistToggle}
+                        disabled={loading}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 ${
+                          isInWatchlist
+                            ? "bg-blue-600 hover:bg-blue-700"
+                            : "bg-white/20 hover:bg-white/30"
+                        }`}
+                      >
+                        {isInWatchlist ? <Minus size={20} /> : <Plus size={20} />}
+                        {isInWatchlist ? "Retirer de la watchlist" : "Ajouter à la watchlist"}
+                      </button>
+                    )}
+
                     {user && (
                       <button
                         onClick={handleMarkAsWatched}
@@ -331,7 +305,7 @@ export default function SeriePage() {
                         }`}
                       >
                         <Check size={20} />
-                        {isWatched ? "Déjà vue" : "Marquer comme vue"}
+                        {isWatched ? "Vue (cliquer pour retirer)" : "Marquer comme vue"}
                       </button>
                     )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { Star, Heart, Calendar, Play, Plus, Check } from "lucide-react";
 import { Serie } from "@/types";
@@ -11,9 +11,8 @@ import {
   getRatingColor,
   handleImageError,
 } from "@/lib/utils";
-import { UserService } from "@/lib/user-service";
 import { useAuth } from "./AuthProvider";
-import { useNotify } from "./NotificationProvider";
+import { useUserLists } from "@/contexts/UserListsContext";
 
 interface SerieCardProps {
   serie: Serie;
@@ -29,113 +28,19 @@ export default function SerieCard({
   className = "",
 }: SerieCardProps) {
   const { user } = useAuth();
-  const notify = useNotify();
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
-  const [isWatched, setIsWatched] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const lists = useUserLists();
+  const isInWatchlist = lists.isInWatchlist("serie", serie.id);
+  const isWatched = lists.isWatched("serie", serie.id);
+  const loading = lists.isBusy("serie", serie.id);
 
-  // Charger l'état initial
-  useEffect(() => {
-    if (user) {
-      loadSerieStatus();
-    }
-  }, [user, serie.id]);
-
-  const loadSerieStatus = async () => {
-    if (!user) return;
-
-    try {
-      const [watchlistStatus, watchedStatus] = await Promise.all([
-        UserService.isInWatchlist(serie.id),
-        UserService.isWatched(serie.id),
-      ]);
-
-      setIsInWatchlist(watchlistStatus);
-      setIsWatched(watchedStatus);
-    } catch (error) {
-      console.error("Erreur lors du chargement du statut de la série:", error);
-    }
+  const handleWatchlistToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    lists.toggleWatchlist("serie", serie);
   };
 
-  const handleWatchlistToggle = async (e: React.MouseEvent) => {
+  const handleMarkAsWatched = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    if (!user) {
-      notify.info(
-        "Connexion requise",
-        "Connectez-vous pour gérer votre watchlist"
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (isInWatchlist) {
-        const success = await UserService.removeFromWatchlist(serie.id);
-        if (success) {
-          setIsInWatchlist(false);
-          notify.success(
-            "Retiré de la watchlist",
-            `"${serie.name}" a été retiré de votre watchlist`
-          );
-        }
-      } else {
-        const success = await UserService.addToWatchlist(serie);
-        if (success) {
-          setIsInWatchlist(true);
-          notify.success(
-            "Ajouté à la watchlist",
-            `"${serie.name}" a été ajouté à votre watchlist`
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la gestion de la watchlist:", error);
-      notify.error(
-        "Erreur",
-        "Une erreur est survenue lors de la mise à jour de votre watchlist"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMarkAsWatched = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    if (!user) {
-      notify.info(
-        "Connexion requise",
-        "Connectez-vous pour marquer des séries comme vues"
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const success = await UserService.markAsWatched(serie);
-      if (success) {
-        setIsWatched(true);
-        // Le trigger PostgreSQL retire automatiquement de la watchlist
-        setIsInWatchlist(false);
-        notify.success(
-          "Marqué comme vu",
-          `"${serie.name}" a été ajouté à vos séries vues`,
-          {
-            label: "Voir mes séries vues",
-            onClick: () => (window.location.href = "/profile"),
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Erreur lors du marquage comme vu:", error);
-      notify.error(
-        "Erreur",
-        "Une erreur est survenue lors du marquage de la série"
-      );
-    } finally {
-      setLoading(false);
-    }
+    lists.markWatched("serie", serie);
   };
 
   const handleCardClick = () => {

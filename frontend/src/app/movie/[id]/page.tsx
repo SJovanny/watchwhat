@@ -19,13 +19,14 @@ import {
   Award,
   Languages,
   Check,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { Movie, MovieDetails, Video, Cast, Crew } from "@/types";
 import { tmdbService, getImageUrl, getBackdropUrl } from "@/lib/tmdb";
 import { formatDateToYear, formatRating, getRatingColor } from "@/lib/utils";
-import { UserService } from "@/lib/user-service";
+import { useUserLists } from "@/contexts/UserListsContext";
 import { useAuth } from "@/components/AuthProvider";
-import { useNotify } from "@/components/NotificationProvider";
 import MovieCard from "@/components/MovieCard";
 
 export default function MoviePage() {
@@ -33,7 +34,6 @@ export default function MoviePage() {
   const router = useRouter();
   const movieId = parseInt(params.id as string);
   const { user } = useAuth();
-  const notify = useNotify();
 
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -43,9 +43,10 @@ export default function MoviePage() {
   const [showTrailer, setShowTrailer] = useState(false);
   const [mainTrailer, setMainTrailer] = useState<Video | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isWatched, setIsWatched] = useState(false);
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const lists = useUserLists();
+  const isWatched = lists.isWatched("movie", movieId);
+  const isInWatchlist = lists.isInWatchlist("movie", movieId);
+  const loading = lists.isBusy("movie", movieId);
 
   useEffect(() => {
     const loadMovieData = async () => {
@@ -85,15 +86,6 @@ export default function MoviePage() {
         );
         setIsFavorite(favorites.some((fav: Movie) => fav.id === movieId));
 
-        // Charger le statut du film (vu/watchlist) si l'utilisateur est connecté
-        if (user) {
-          const [watchedStatus, watchlistStatus] = await Promise.all([
-            UserService.isMovieWatched(movieId),
-            UserService.isMovieInWatchlist(movieId),
-          ]);
-          setIsWatched(watchedStatus);
-          setIsInWatchlist(watchlistStatus);
-        }
       } catch (err) {
         console.error("Erreur lors du chargement du film:", err);
         setError("Impossible de charger les détails du film");
@@ -129,47 +121,15 @@ export default function MoviePage() {
     }
   };
 
-  const handleMarkAsWatched = async () => {
-    if (!movie || !user) {
-      notify.info(
-        "Connexion requise",
-        "Connectez-vous pour marquer des films comme vus"
-      );
-      return;
-    }
+  const handleMarkAsWatched = () => {
+    if (!movie) return;
+    if (isWatched) lists.unmarkWatched("movie", movie);
+    else lists.markWatched("movie", movie);
+  };
 
-    setLoading(true);
-    try {
-      if (isWatched) {
-        notify.info(
-          "Déjà marqué comme vu",
-          `"${movie.title}" est déjà dans vos films vus`
-        );
-      } else {
-        const success = await UserService.markMovieAsWatched(movie);
-        if (success) {
-          setIsWatched(true);
-          // Le trigger PostgreSQL retire automatiquement de la watchlist
-          setIsInWatchlist(false);
-          notify.success(
-            "Marqué comme vu",
-            `"${movie.title}" a été ajouté à vos films vus`,
-            {
-              label: "Voir mes films vus",
-              onClick: () => router.push("/profile"),
-            }
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors du marquage comme vu:", error);
-      notify.error(
-        "Erreur",
-        "Une erreur est survenue lors du marquage du film"
-      );
-    } finally {
-      setLoading(false);
-    }
+  const handleWatchlistToggle = () => {
+    if (!movie) return;
+    lists.toggleWatchlist("movie", movie);
   };
 
   const handleMovieSelect = (selectedMovie: Movie) => {
@@ -396,6 +356,21 @@ export default function MoviePage() {
                       </button>
                     )}
 
+                    {user && !isWatched && (
+                      <button
+                        onClick={handleWatchlistToggle}
+                        disabled={loading}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 ${
+                          isInWatchlist
+                            ? "bg-blue-600 hover:bg-blue-700"
+                            : "bg-white/20 hover:bg-white/30"
+                        }`}
+                      >
+                        {isInWatchlist ? <Minus size={20} /> : <Plus size={20} />}
+                        {isInWatchlist ? "Retirer de la watchlist" : "Ajouter à la watchlist"}
+                      </button>
+                    )}
+
                     {user && (
                       <button
                         onClick={handleMarkAsWatched}
@@ -407,7 +382,7 @@ export default function MoviePage() {
                         }`}
                       >
                         <Check size={20} />
-                        {isWatched ? "Déjà vu" : "Marquer comme vu"}
+                        {isWatched ? "Vu (cliquer pour retirer)" : "Marquer comme vu"}
                       </button>
                     )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { TrendingUp, Star, ChevronRight, ExternalLink } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import SerieCard from "@/components/SerieCard";
@@ -29,11 +29,15 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const notify = useNotify();
 
+  // Ignore les réponses d'un chargement périmé (changement de préférences/période en cours de route)
+  const requestId = useRef(0);
+
   useEffect(() => {
     loadData();
-  }, [timeWindow, user, preferences]);
+  }, [timeWindow, user?.id, preferences]);
 
   const loadData = async () => {
+    const currentRequest = ++requestId.current;
     try {
       // Charger les données de base - récupérer 2 pages pour avoir plus de contenu tendance
       const [trending1, trending2, topRated] = await Promise.all([
@@ -41,6 +45,8 @@ export default function Home() {
         tmdbService.getTrendingAll(timeWindow, 2),
         tmdbService.getTopRatedSeries(),
       ]);
+
+      if (currentRequest !== requestId.current) return;
 
       // Combiner les 2 pages pour avoir ~40 contenus tendance
       let allTrending = [
@@ -78,7 +84,6 @@ export default function Home() {
       }
 
       setTrendingContent(allTrending.slice(0, 20)); // Garder les 20 premiers après filtrage
-      console.log(`[DEBUG] Trending loaded: ${allTrending.length} total, showing ${Math.min(allTrending.length, 20)}`);
 
       // Filtrer et définir les séries les mieux notées
       let topSeries = topRated.results || [];
@@ -96,7 +101,7 @@ export default function Home() {
       console.error("Erreur lors du chargement des données:", error);
       notify.error("Erreur", "Impossible de charger les séries");
     } finally {
-      setIsLoading(false);
+      if (currentRequest === requestId.current) setIsLoading(false);
     }
   };
 
