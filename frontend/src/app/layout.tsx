@@ -75,7 +75,7 @@ export default function RootLayout({
                 <NotificationProvider>
                   <UserListsProvider>
                     <Navbar />
-                    <main className="pt-16">
+                    <main className="pt-16 pb-16 md:pb-0">
                       {children}
                     </main>
                   </UserListsProvider>

@@ -168,17 +168,17 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Séries tendances avec carrousel */}
         <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <TrendingUp className="h-6 w-6 text-orange-500" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {timeWindow === "day" ? t.home.trendingToday : t.home.trendingWeek}
               </h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 ({trendingContent.length} contenus)
               </span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => handleTimeWindowChange("day")}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
@@ -223,10 +223,10 @@ export default function Home() {
 
         {/* Mieux notées */}
         <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <Star className="h-6 w-6 text-yellow-500" fill="currentColor" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {t.home.topRated}
               </h2>
             </div>

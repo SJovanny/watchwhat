@@ -448,25 +448,25 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20 backdrop-blur-sm"></div>
 
         {/* Contenu principal */}
-        <div className="relative z-10 p-6 lg:p-8">
+        <div className="relative z-10 p-4 sm:p-6 lg:p-8">
           {/* Header compact mais stylé */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 {/* Icône avec effet néon */}
-                <div className="relative">
-                  <div className="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-xl">
-                    <Film className="h-7 w-7 text-white" />
+                <div className="relative shrink-0">
+                  <div className="p-2.5 sm:p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-xl">
+                    <Film className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl blur-lg opacity-50 animate-pulse"></div>
                 </div>
                 
                 {/* Titre compact */}
-                <div>
-                  <h2 className="text-3xl lg:text-4xl font-black bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent leading-tight">
+                <div className="min-w-0">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent leading-tight">
                     Trailers Populaires
                   </h2>
-                  <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2">
                     <TrendingUp className="h-4 w-4 text-yellow-400 animate-pulse" />
                     <span className="text-white/90 text-sm font-semibold">
                       Les plus sensationnels du moment
@@ -504,8 +504,8 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
             
             {/* Description compacte */}
             <div className="max-w-3xl">
-              <p className="text-lg text-white/90 leading-relaxed font-light">
-                Découvrez les bandes-annonces les plus populaires dans notre collection horizontale. 
+              <p className="text-sm sm:text-lg text-white/90 leading-relaxed font-light">
+                Découvrez les bandes-annonces les plus populaires dans notre collection horizontale.{" "}
                 <span className="font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   Faites défiler pour explorer l'univers cinématographique.
                 </span>
@@ -517,7 +517,7 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
           <div className="relative">
             <div 
               ref={scrollContainerRef}
-              className="overflow-x-auto scrollbar-hide scroll-smooth px-8 cursor-grab active:cursor-grabbing"
+              className="overflow-x-auto scrollbar-hide scroll-smooth px-2 sm:px-8 cursor-grab active:cursor-grabbing"
             >
               <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
                 {trailers.slice(0, 20).map((trailerItem, index) => (
@@ -529,7 +529,7 @@ export default function PopularTrailers({ className = '' }: PopularTrailersProps
                     animationDelay: `${index * 0.05}s`
                   }}
                 >
-                  <div className="relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 w-80">
+                  <div className="relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 w-72 sm:w-80">
                     {/* Image container horizontal avec ratio 16:9 */}
                     <div className="relative h-44 overflow-hidden">
                       {getBackdrop(trailerItem.content) ? (

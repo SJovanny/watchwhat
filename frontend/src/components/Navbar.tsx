@@ -40,6 +40,7 @@ export default function Navbar() {
 
 
   return (
+    <>
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -104,12 +105,12 @@ export default function Navbar() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-4">
             {/* Profil utilisateur ou bouton de connexion */}
             {!loading && (
               <div className="flex items-center space-x-2">
                 {user ? (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-1 sm:space-x-3">
                     {/* Avatar utilisateur */}
                     <div className="flex items-center space-x-2">
                       {user.avatar ? (
@@ -146,7 +147,7 @@ export default function Navbar() {
                 ) : (
                   <button
                     onClick={handleAuthAction}
-                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="hidden md:flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <LogIn size={16} />
                     <span>{t.nav.login}</span>
@@ -235,62 +236,64 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Navigation Mobile Bottom (conservée pour la compatibilité) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-4 py-2">
-        <div className="flex items-center justify-around">
+    </nav>
+
+      {/* Navigation Mobile Bottom: hors du <nav> (son backdrop-filter piégerait le position:fixed) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 px-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+            className="flex flex-1 min-w-0 flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
           >
             <Home size={20} />
-            <span className="text-xs">{t.nav.home}</span>
+            <span className="text-[11px] truncate max-w-full">{t.nav.home}</span>
           </Link>
 
           <Link
             href="/movies"
-            className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+            className="flex flex-1 min-w-0 flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
           >
             <Film size={20} />
-            <span className="text-xs">{t.nav.movies}</span>
+            <span className="text-[11px] truncate max-w-full">{t.nav.movies}</span>
           </Link>
 
           <Link
             href="/discover"
-            className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+            className="flex flex-1 min-w-0 flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
           >
             <Tv size={20} />
-            <span className="text-xs">{t.nav.series}</span>
+            <span className="text-[11px] truncate max-w-full">{t.nav.series}</span>
           </Link>
 
           {user ? (
             <>
               <Link
                 href="/favorites"
-                className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+                className="flex flex-1 min-w-0 flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
               >
                 <Heart size={20} />
-                <span className="text-xs">{t.nav.favorites}</span>
+                <span className="text-[11px] truncate max-w-full">{t.nav.favorites}</span>
               </Link>
 
               <Link
                 href="/profile"
-                className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+                className="flex flex-1 min-w-0 flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
               >
                 <User size={20} />
-                <span className="text-xs">{t.nav.profile}</span>
+                <span className="text-[11px] truncate max-w-full">{t.nav.profile}</span>
               </Link>
             </>
           ) : (
             <button
               onClick={handleAuthAction}
-              className="flex flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
+              className="flex flex-1 min-w-0 flex-col items-center space-y-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2"
             >
               <LogIn size={20} />
-              <span className="text-xs">{t.nav.login}</span>
+              <span className="text-[11px] truncate max-w-full">{t.nav.login}</span>
             </button>
           )}
         </div>
       </div>
-    </nav>
+    </>
   );
 }

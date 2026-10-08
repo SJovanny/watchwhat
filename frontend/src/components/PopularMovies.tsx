@@ -67,10 +67,10 @@ export default function PopularMovies({ className = '' }: PopularMoviesProps) {
   if (isLoading) {
     return (
       <section className={className}>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div className="flex items-center space-x-2">
             <Film className="h-6 w-6 text-blue-500" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               {t.home.popularMovies}
             </h2>
           </div>
@@ -97,10 +97,10 @@ export default function PopularMovies({ className = '' }: PopularMoviesProps) {
 
   return (
     <section className={className}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <Film className="h-6 w-6 text-blue-500" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
             {t.home.popularMovies}
           </h2>
           <span className="text-sm text-gray-500 dark:text-gray-400">

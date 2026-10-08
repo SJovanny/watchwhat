@@ -181,23 +181,23 @@ interface Genre {
   }, [] as Genre[]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-                <Settings className="h-8 w-8 text-white" />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shrink-0">
+                <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
               </div>
-              <div>
-                <h1 className="text-4xl font-black text-white">Préférences</h1>
-                <p className="text-white/70 text-lg">Personnalisez votre expérience WatchWhat</p>
+              <div className="min-w-0">
+                <h1 className="text-3xl sm:text-4xl font-black text-white">Préférences</h1>
+                <p className="text-white/70 text-base sm:text-lg">Personnalisez votre expérience WatchWhat</p>
               </div>
             </div>
 
             {/* Auto-save Status */}
-            <div className="flex items-center space-x-2 px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-white/10">
+            <div className="flex items-center space-x-2 self-start sm:self-auto px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-white/10">
               {saveStatus === 'saving' && (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
