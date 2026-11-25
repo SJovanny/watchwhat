@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingUp, Star, ChevronRight, ExternalLink } from "lucide-react";
-import SearchBar from "@/components/SearchBar";
-import SerieCard from "@/components/SerieCard";
+import Image from "next/image";
+import SectionHeader, { Segmented } from "@/components/SectionHeader";
 import AllTrendingCarousel from "@/components/AllTrendingCarousel";
 import PopularTrailers from "@/components/PopularTrailers";
 import PopularMovies from "@/components/PopularMovies";
@@ -11,8 +10,7 @@ import RegionalTrending from "@/components/RegionalTrending";
 import LoginButton from "@/components/LoginButton";
 import HeroSection from "@/components/HeroSection";
 import { Serie, SearchResult } from "@/types";
-import { tmdbService } from "@/lib/tmdb";
-import { UserService } from "@/lib/user-service";
+import { tmdbService, getImageUrl } from "@/lib/tmdb";
 import { useAuth } from "@/components/AuthProvider";
 import { useNotify } from "@/components/NotificationProvider";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -148,129 +146,151 @@ export default function Home() {
     [notify]
   );
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
+  const container = "mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
-      {/* Hero Section */}
+    <div className="min-h-screen pb-24 md:pb-16">
       <HeroSection />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Séries tendances avec carrousel */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-6 w-6 text-orange-500" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {timeWindow === "day" ? t.home.trendingToday : t.home.trendingWeek}
-              </h2>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                ({trendingContent.length} contenus)
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleTimeWindowChange("day")}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  timeWindow === "day"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.home.today}
-              </button>
-              <button
-                onClick={() => handleTimeWindowChange("week")}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  timeWindow === "week"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.home.thisWeek}
-              </button>
-              <button
-                onClick={() => (window.location.href = "/trending")}
-                className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline text-sm"
-              >
-                <span>{t.home.viewAll}</span>
-                <ExternalLink size={14} />
-              </button>
-            </div>
-          </div>
+      <div className={`${container} relative space-y-14 pt-6 sm:space-y-16`}>
+        {/* Tendances */}
+        <section aria-labelledby="row-trending">
+          <SectionHeader
+            title={<span id="row-trending">{timeWindow === "day" ? t.home.trendingToday : t.home.trendingWeek}</span>}
+            meta={isLoading ? undefined : `${trendingContent.length} titres`}
+            action={{ label: t.home.viewAll, href: "/trending" }}
+          >
+            <Segmented
+              label="Période"
+              value={timeWindow}
+              onChange={handleTimeWindowChange}
+              options={[
+                { value: "day", label: t.home.today },
+                { value: "week", label: t.home.thisWeek },
+              ]}
+            />
+          </SectionHeader>
 
-          <AllTrendingCarousel
-            content={trendingContent}
-            onContentClick={handleContentSelect}
-          />
+          {isLoading ? (
+            <RowSkeleton />
+          ) : (
+            <AllTrendingCarousel content={trendingContent} onContentClick={handleContentSelect} />
+          )}
         </section>
 
-        {/* Regional Trending Section - Only for logged-in users */}
-        {user && (
-          <RegionalTrending
-            onContentClick={handleContentSelect}
-            className="mb-12"
-          />
+        {/* Classement des séries les mieux notées */}
+        {topRatedSeries.length > 0 && (
+          <section aria-labelledby="row-top">
+            <SectionHeader
+              title={<span id="row-top">{t.home.topRated}</span>}
+              meta="Top 10 · note TMDB"
+              action={{ label: t.home.viewAll, href: "/discover" }}
+            />
+            <RankedRow series={topRatedSeries.slice(0, 10)} onSelect={handleSerieSelect} />
+          </section>
         )}
 
-        {/* Popular Trailers Section */}
-        <PopularTrailers className="mb-12" />
+        {/* Populaire dans le pays de l'utilisateur */}
+        {user && <RegionalTrending onContentClick={handleContentSelect} />}
+
+        {/* Bandes-annonces */}
+        <PopularTrailers />
 
         {/* Films populaires */}
-        <PopularMovies className="mb-12" />
+        <PopularMovies />
 
-        {/* Mieux notées */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2">
-              <Star className="h-6 w-6 text-yellow-500" fill="currentColor" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {t.home.topRated}
-              </h2>
-            </div>
-            <button className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline">
-              <span>{t.home.viewAll}</span>
-              <ChevronRight size={16} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {topRatedSeries.map((serie) => (
-              <SerieCard
-                key={serie.id}
-                serie={serie}
-                onSerieClick={handleSerieSelect}
-              />
-            ))}
-          </div>
-        </section>
-
-
-        {/* Call to action pour les utilisateurs non connectés */}
+        {/* Invitation à créer un compte */}
         {!user && (
-          <section className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-8 text-center">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Rejoignez WatchWhat
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Créez votre compte pour sauvegarder vos séries favorites, créer
-              votre watchlist et recevoir des recommandations personnalisées.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <LoginButton />
+          <section className="relative overflow-hidden rounded-2xl border border-line bg-surface">
+            <div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-[1.2fr_1fr] lg:p-16">
+              <div>
+                <h2 className="font-display text-[36px] leading-[1.05] text-ink sm:text-[48px]">
+                  Gardez la liste de ce que vous voulez voir
+                </h2>
+                <p className="mt-4 max-w-[34rem] text-[16px] leading-[1.6] text-ink-2">
+                  Un compte garde votre watchlist, vos favoris et ce que vous avez déjà vu,
+                  et trie les tendances selon vos genres et votre pays.
+                </p>
+                <div className="mt-8">
+                  <LoginButton />
+                </div>
+              </div>
+              <ul className="grid grid-cols-3 gap-3" aria-hidden>
+                {topRatedSeries.slice(3, 6).map((serie) => (
+                  <li
+                    key={serie.id}
+                    className="relative aspect-[2/3] overflow-hidden rounded-lg ring-1 ring-line"
+                  >
+                    {serie.poster_path && (
+                      <Image
+                        src={getImageUrl(serie.poster_path, "w300")}
+                        alt=""
+                        fill
+                        sizes="160px"
+                        className="object-cover"
+                      />
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
         )}
       </div>
+    </div>
+  );
+}
+
+function RowSkeleton() {
+  return (
+    <div className="flex gap-3 overflow-hidden sm:gap-4" aria-hidden>
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="w-[140px] flex-shrink-0 sm:w-[160px] md:w-[176px] lg:w-[192px]">
+          <div className="skeleton aspect-[2/3]" />
+          <div className="skeleton mt-3 h-4 w-3/4" />
+          <div className="skeleton mt-2 h-3 w-1/2" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Le classement : grands chiffres serif adossés aux affiches */
+function RankedRow({ series, onSelect }: { series: Serie[]; onSelect: (s: Serie) => void }) {
+  return (
+    <div className="row-scroller scrollbar-hide -mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+      <ol className="flex gap-2 sm:gap-4" style={{ width: "max-content" }}>
+        {series.map((serie, i) => (
+          <li key={serie.id}>
+            <button
+              onClick={() => onSelect(serie)}
+              aria-label={`${i + 1}. ${serie.name}`}
+              className="group flex items-end rounded-lg text-left"
+            >
+              <span
+                aria-hidden
+                className="font-display relative -mr-2 select-none text-[136px] leading-[0.74] tracking-[-0.04em] text-canvas [-webkit-text-stroke:2px_var(--ink-3)] [paint-order:stroke_fill] transition-[-webkit-text-stroke-color] duration-300 group-hover:[-webkit-text-stroke-color:var(--ink)] sm:-mr-3 sm:text-[176px]"
+              >
+                {i + 1}
+              </span>
+              <span className="relative block aspect-[2/3] w-[112px] overflow-hidden rounded-lg bg-raised ring-1 ring-line transition-transform duration-300 ease-[var(--ease-cinema)] group-hover:-translate-y-0.5 sm:w-[132px]">
+                {serie.poster_path && (
+                  <Image
+                    src={getImageUrl(serie.poster_path, "w300")}
+                    alt=""
+                    fill
+                    sizes="132px"
+                    className="object-cover transition-transform duration-500 ease-[var(--ease-cinema)] group-hover:scale-[1.03]"
+                  />
+                )}
+                <span className="meta absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-white backdrop-blur-sm">
+                  ★ {serie.vote_average.toFixed(1)}
+                </span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

@@ -40,9 +40,9 @@ export default function DisplayTab({
                   updatePreferences({ theme: newTheme });
                   setGlobalTheme(newTheme === "auto" ? "system" : newTheme);
                 }}
-                className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+                className={`p-3 rounded-xl text-sm font-medium transition-colors duration-300 ${
                   preferences.theme === theme.value
-                    ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+                    ? "bg-accent text-white"
                     : "bg-white/10 text-white/70 hover:text-white hover:bg-white/20"
                 }`}
               >
@@ -70,9 +70,9 @@ export default function DisplayTab({
                     defaultView: view.value as "grid" | "list",
                   })
                 }
-                className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+                className={`p-3 rounded-xl text-sm font-medium transition-colors duration-300 ${
                   preferences.defaultView === view.value
-                    ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+                    ? "bg-accent text-white"
                     : "bg-white/10 text-white/70 hover:text-white hover:bg-white/20"
                 }`}
               >

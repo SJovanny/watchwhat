@@ -2,15 +2,10 @@
 
 import React from "react";
 import Image from "next/image";
-import { Star, Calendar, Film, Heart, Plus, Check, Play } from "lucide-react";
+import { Film, Heart, Plus, Check, Play } from "lucide-react";
 import { Movie, Serie } from "@/types";
 import { getImageUrl } from "@/lib/tmdb";
-import {
-  formatDateToYear,
-  formatRating,
-  getRatingColor,
-  handleImageError,
-} from "@/lib/utils";
+import { formatDateToYear, formatRating, handleImageError } from "@/lib/utils";
 import { useAuth } from "./AuthProvider";
 import {
   useContentActions,
@@ -33,8 +28,9 @@ function isSerie(content: Movie | Serie): content is Serie {
 }
 
 /**
- * Composant de base unifié pour afficher les films et les séries.
- * Ce composant contient toute la logique partagée entre MovieCard et SerieCard.
+ * Affiche unifiée pour les films et les séries.
+ * L'affiche porte l'image ; titre et ligne mono en dessous ;
+ * actions (vu, ma liste) au survol.
  */
 export default function BaseContentCard({
   content,
@@ -53,164 +49,124 @@ export default function BaseContentCard({
   } = useContentActions(content, contentType);
 
   const title = getContentTitle(content);
-  const date = getContentDate(content);
+  const year = formatDateToYear(getContentDate(content));
   const posterPath = content.poster_path;
+  const country =
+    isSerie(content) && content.origin_country?.length ? content.origin_country[0] : null;
 
-  const handleClick = () => {
-    onContentClick(content);
+  const handleClick = () => onContentClick(content);
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onContentClick(content);
+    }
   };
 
+  const actionBtn =
+    "inline-flex h-9 w-9 items-center justify-center rounded-full border transition-[background-color,border-color,transform] duration-150 active:scale-[0.94] disabled:opacity-50";
+
   return (
-    <div
-      className={`group cursor-pointer bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 ${className}`}
+    <article
+      role="link"
+      tabIndex={0}
+      aria-label={`${title}, ${year}`}
       onClick={handleClick}
+      onKeyDown={handleKey}
+      className={`group cursor-pointer rounded-lg outline-offset-4 ${className}`}
     >
-      {/* Image */}
-      <div className="relative aspect-[2/3] overflow-hidden">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-raised ring-1 ring-line transition-[transform,box-shadow] duration-300 ease-[var(--ease-cinema)] group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_32px_rgb(0_0_0/0.35)]">
         {posterPath ? (
           <Image
-            src={getImageUrl(posterPath, "w300")}
-            alt={title}
+            src={getImageUrl(posterPath, "w500")}
+            alt=""
             fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover group-hover:scale-110 transition-transform duration-300"
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 200px"
+            className="object-cover transition-transform duration-500 ease-[var(--ease-cinema)] group-hover:scale-[1.03]"
             onError={handleImageError}
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-4 text-center">
             {contentType === "movie" ? (
-              <Film size={32} className="text-gray-400" />
+              <Film size={28} strokeWidth={1.5} className="text-ink-3" />
             ) : (
-              <Play size={32} className="text-gray-400" />
+              <Play size={28} strokeWidth={1.5} className="text-ink-3" />
+            )}
+            <span className="font-display text-[18px] leading-tight text-ink-2">{title}</span>
+          </div>
+        )}
+
+        {/* Statut */}
+        {user && (isWatched || isInWatchlist) && (
+          <div className="absolute left-2 top-2 z-20 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-1 text-white backdrop-blur-sm">
+            {isWatched ? (
+              <>
+                <Check size={12} strokeWidth={2} />
+                <span className="text-[11px] leading-none">Vu</span>
+              </>
+            ) : (
+              <>
+                <span aria-hidden className="h-[6px] w-[6px] rounded-full bg-accent" />
+                <span className="text-[11px] leading-none">Ma liste</span>
+              </>
             )}
           </div>
         )}
 
-        {/* Overlay avec actions */}
+        {/* Actions au survol */}
         {showActions && (
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
-            <div className="flex space-x-3">
+          <div className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2.5 pt-14 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+            <div className="flex gap-1.5">
+              <button
+                onClick={handleWatchlistToggle}
+                disabled={loading}
+                aria-label={isInWatchlist ? "Retirer de ma liste" : "Ajouter à ma liste"}
+                title={isInWatchlist ? "Retirer de ma liste" : "Ajouter à ma liste"}
+                className={`${actionBtn} ${
+                  isInWatchlist
+                    ? "border-white bg-white text-gray-950 hover:bg-white/85"
+                    : "border-white/40 bg-black/30 text-white hover:border-white hover:bg-white/10"
+                }`}
+              >
+                {isInWatchlist ? (
+                  <Heart size={16} fill="currentColor" strokeWidth={0} />
+                ) : (
+                  <Plus size={16} strokeWidth={1.75} />
+                )}
+              </button>
               {!isWatched && (
                 <button
                   onClick={handleMarkAsWatched}
                   disabled={loading}
-                  className="p-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition-all transform hover:scale-110 disabled:opacity-50 shadow-lg"
+                  aria-label="Marquer comme vu"
                   title="Marquer comme vu"
+                  className={`${actionBtn} border-white/40 bg-black/30 text-white hover:border-white hover:bg-white/10`}
                 >
-                  <Check size={20} />
+                  <Check size={16} strokeWidth={1.75} />
                 </button>
               )}
-
-              <button
-                onClick={handleWatchlistToggle}
-                disabled={loading}
-                className={`p-3 rounded-full transition-all transform hover:scale-110 disabled:opacity-50 shadow-lg ${
-                  isInWatchlist
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-white text-gray-800 hover:bg-gray-100"
-                }`}
-                title={
-                  isInWatchlist
-                    ? "Retirer de la watchlist"
-                    : "Ajouter à la watchlist"
-                }
-              >
-                {isInWatchlist ? (
-                  <Heart size={20} fill="currentColor" />
-                ) : (
-                  <Plus size={20} />
-                )}
-              </button>
             </div>
-          </div>
-        )}
-
-        {/* Rating badge */}
-        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center space-x-1 z-20">
-          <Star
-            size={12}
-            className={getRatingColor(content.vote_average)}
-            fill="currentColor"
-          />
-          <span className="text-white text-xs font-bold">
-            {formatRating(content.vote_average)}
-          </span>
-        </div>
-
-        {/* Indicateurs de statut */}
-        {user && (
-          <div className="absolute top-2 left-2 flex flex-col space-y-1 z-20">
-            {isWatched && (
-              <div
-                className="bg-green-600 text-white p-1 rounded-full"
-                title="Déjà vu"
-              >
-                <Check size={12} />
-              </div>
-            )}
-            {isInWatchlist && !isWatched && (
-              <div
-                className="bg-blue-600 text-white p-1 rounded-full"
-                title="Dans la watchlist"
-              >
-                <Heart size={12} fill="currentColor" />
-              </div>
-            )}
+            <span className="meta pb-1 text-white/90">★ {formatRating(content.vote_average)}</span>
           </div>
         )}
       </div>
 
-      {/* Contenu */}
-      <div className="p-3">
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-2 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {title}
-        </h3>
-
-        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-          <div className="flex items-center space-x-1">
-            <Calendar size={10} />
-            <span>{formatDateToYear(date)}</span>
-          </div>
-
-          {content.vote_count > 0 && (
-            <span className="text-xs">{content.vote_count} votes</span>
+      <div className="px-0.5 pt-3">
+        <h3 className="line-clamp-1 text-[14px] font-medium leading-5 text-ink">{title}</h3>
+        <p className="meta mt-1 flex items-center gap-1.5 text-ink-3">
+          <span>{year}</span>
+          <span aria-hidden>·</span>
+          <span className="text-yellow-500 dark:text-yellow-400">★</span>
+          <span className="-ml-1">{formatRating(content.vote_average)}</span>
+          {country && (
+            <>
+              <span aria-hidden>·</span>
+              <span>{country}</span>
+            </>
           )}
-        </div>
-
-        {/* Overview preview */}
-        {content.overview && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
-            {content.overview}
-          </p>
-        )}
-
-        {/* Extra info for series: Country badges */}
-        {isSerie(content) &&
-          content.origin_country &&
-          content.origin_country.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {content.origin_country.slice(0, 2).map((country) => (
-                <span
-                  key={country}
-                  className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-400 rounded-full"
-                >
-                  {country}
-                </span>
-              ))}
-            </div>
-          )}
-
-        {/* Actions pour utilisateurs non connectés */}
-        {showActions && !user && (
-          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-              Connectez-vous pour gérer vos{" "}
-              {contentType === "movie" ? "films" : "séries"}
-            </p>
-          </div>
-        )}
+        </p>
       </div>
-    </div>
+    </article>
   );
 }
 

@@ -10,7 +10,7 @@ export default function SupabaseAuthPage() {
   const [showSuccess, setShowSuccess] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
       <div className="max-w-4xl w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           
@@ -18,10 +18,7 @@ export default function SupabaseAuthPage() {
           <div className="space-y-8">
             <div className="text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start space-x-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-                  <Film className="h-8 w-8 text-white" />
-                </div>
-                <h1 className="text-4xl font-black text-white">
+                <h1 className="font-display text-[40px] leading-none text-white">
                   WatchWhat
                 </h1>
               </div>
@@ -39,7 +36,7 @@ export default function SupabaseAuthPage() {
               <h3 className="text-2xl font-bold text-white">Pourquoi créer un compte ?</h3>
               
               <div className="space-y-4">
-                <div className="flex items-start space-x-4 p-4 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20">
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-xl border border-white/10">
                   <div className="p-2 bg-pink-500/20 rounded-lg">
                     <Heart className="h-6 w-6 text-pink-400" />
                   </div>
@@ -49,7 +46,7 @@ export default function SupabaseAuthPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-4 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20">
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-xl border border-white/10">
                   <div className="p-2 bg-purple-500/20 rounded-lg">
                     <Star className="h-6 w-6 text-purple-400" />
                   </div>
@@ -59,7 +56,7 @@ export default function SupabaseAuthPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-4 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20">
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-xl border border-white/10">
                   <div className="p-2 bg-blue-500/20 rounded-lg">
                     <Users className="h-6 w-6 text-blue-400" />
                   </div>
@@ -69,7 +66,7 @@ export default function SupabaseAuthPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-4 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20">
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-xl border border-white/10">
                   <div className="p-2 bg-green-500/20 rounded-lg">
                     <Shield className="h-6 w-6 text-green-400" />
                   </div>
@@ -82,10 +79,10 @@ export default function SupabaseAuthPage() {
           {/* Section connexion */}
           <div className="flex items-center justify-center">
             <div className="w-full max-w-md">
-              <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8">
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-8">
                 
                 <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
                     <Heart className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-2">

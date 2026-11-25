@@ -156,18 +156,15 @@ export default function MoviesPage() {
   const displayedMovies = isSearching && searchQuery ? searchResults : movies;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen pb-24 md:pb-16">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="border-b border-line">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12 py-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Titre */}
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
-                <Film className="h-8 w-8 text-white" />
-              </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className="font-display text-[44px] leading-[1.05] text-ink sm:text-[56px]">
                   Films
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -200,7 +197,7 @@ export default function MoviesPage() {
       </div>
 
       {/* Contenu principal */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12 py-8">
         {/* Résultats de recherche */}
         {isSearching && searchQuery && (
           <div className="mb-6">
@@ -217,23 +214,23 @@ export default function MoviesPage() {
 
         {/* Grid de films */}
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
             {[...Array(20)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md animate-pulse"
+                className=""
               >
-                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700"></div>
+                <div className="skeleton aspect-[2/3]"></div>
                 <div className="p-3 space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                  <div className="skeleton h-4"></div>
+                  <div className="skeleton h-3 w-2/3"></div>
                 </div>
               </div>
             ))}
           </div>
         ) : displayedMovies.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
               {displayedMovies.map((movie) => (
                 <MovieCard
                   key={movie.id}

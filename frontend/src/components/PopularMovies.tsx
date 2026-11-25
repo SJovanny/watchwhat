@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Film, Star, ChevronRight, Calendar } from 'lucide-react';
 import { Movie } from '@/types';
 import { tmdbService } from '@/lib/tmdb';
-import MovieCard from './MovieCard';
+import AllTrendingCarousel from './AllTrendingCarousel';
+import SectionHeader from './SectionHeader';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePreferences } from "@/contexts/PreferencesContext";
 
@@ -50,7 +50,7 @@ export default function PopularMovies({ className = '' }: PopularMoviesProps) {
         results = response.results;
       }
 
-      setMovies(results.slice(0, 12)); // Afficher 12 films
+      setMovies(results.slice(0, 20));
     } catch (error) {
       console.error('Erreur lors du chargement des films populaires:', error);
       setMovies([]);
@@ -63,71 +63,28 @@ export default function PopularMovies({ className = '' }: PopularMoviesProps) {
     window.location.href = `/movie/${movie.id}`;
   };
 
-  const handleViewAll = () => {
-    window.location.href = '/movies';
-  };
-
-  if (isLoading) {
-    return (
-      <section className={className}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
-            <Film className="h-6 w-6 text-blue-500" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {t.home.popularMovies}
-            </h2>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md animate-pulse">
-              <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700"></div>
-              <div className="p-3 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-              </div>
+  return (
+    <section className={className} aria-labelledby="row-popular-movies">
+      <SectionHeader
+        title={<span id="row-popular-movies">{t.home.popularMovies}</span>}
+        meta={isLoading ? undefined : `${movies.length} films`}
+        action={{ label: t.home.viewAll, href: '/movies' }}
+      />
+      {isLoading ? (
+        <div className="flex gap-3 overflow-hidden sm:gap-4" aria-hidden>
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="w-[140px] flex-shrink-0 sm:w-[160px] md:w-[176px] lg:w-[192px]">
+              <div className="skeleton aspect-[2/3]" />
+              <div className="skeleton mt-3 h-4 w-3/4" />
             </div>
           ))}
         </div>
-      </section>
-    );
-  }
-
-  if (movies.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className={className}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <Film className="h-6 w-6 text-blue-500" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {t.home.popularMovies}
-          </h2>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            ({movies.length} films)
-          </span>
-        </div>
-        <button 
-          onClick={handleViewAll}
-          className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          <span>{t.home.viewAll}</span>
-          <ChevronRight size={16} />
-        </button>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {movies.map((movie) => (
-          <MovieCard
-            key={movie.id}
-            movie={movie}
-            onMovieClick={handleMovieSelect}
-          />
-        ))}
-      </div>
+      ) : movies.length === 0 ? null : (
+        <AllTrendingCarousel
+          content={movies.map((m) => ({ ...m, media_type: 'movie' as const }))}
+          onContentClick={(item) => handleMovieSelect(item as unknown as Movie)}
+        />
+      )}
     </section>
   );
 }

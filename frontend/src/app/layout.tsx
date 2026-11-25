@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { NotificationProvider } from "@/components/NotificationProvider";
@@ -18,9 +18,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal"],
+});
+
 export const metadata: Metadata = {
-  title: "WatchWhat - Recommandations de séries personnalisées",
-  description: "Découvrez de nouvelles séries TV basées sur vos goûts et votre historique de visionnage",
+  title: "WatchWhat · Que regarder ce soir",
+  description: "Films et séries en tendance, bandes-annonces et watchlist, filtrés selon vos goûts",
   keywords: "séries, TV, recommandations, TMDB, streaming",
   authors: [{ name: "WatchWhat Team" }],
 };
@@ -28,6 +35,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0d0d0e" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f6f7" },
+  ],
 };
 
 export default function RootLayout({
@@ -36,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="fr" className={`dark ${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -46,13 +57,13 @@ export default function RootLayout({
                   var theme = localStorage.getItem('theme');
                   var isDark = false;
                   
-                  if (theme === 'dark') {
-                    isDark = true;
-                  } else if (theme === 'light') {
+                  if (theme === 'light') {
                     isDark = false;
-                  } else {
-                    // theme === 'system' ou pas de préférence sauvegardée
+                  } else if (theme === 'system') {
                     isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  } else {
+                    // 'dark' ou pas de préférence : la salle est sombre par défaut
+                    isDark = true;
                   }
                   
                   if (isDark) {
@@ -66,14 +77,20 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-sans antialiased bg-gray-50 dark:bg-gray-900 min-h-screen" suppressHydrationWarning>
+      <body className="font-sans antialiased bg-canvas text-ink min-h-screen" suppressHydrationWarning>
         <ThemeProvider>
           <LanguageProvider>
             <PreferencesProvider>
               <AuthProvider>
                 <NotificationProvider>
                   <Navbar />
-                  <main className="pt-16">
+                  <a
+                    href="#contenu"
+                    className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:text-ink"
+                  >
+                    Aller au contenu
+                  </a>
+                  <main id="contenu" className="pt-16">
                     {children}
                   </main>
                 </NotificationProvider>

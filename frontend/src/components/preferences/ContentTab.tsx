@@ -127,9 +127,9 @@ export default function ContentTab({
             <button
               key={`fav-${genre.id}`}
               onClick={() => toggleGenre(genre.id, "favorite")}
-              className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+              className={`p-3 rounded-xl text-sm font-medium transition-colors duration-300 ${
                 preferences.favoriteGenres.includes(genre.id)
-                  ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                  ? "bg-green-600 text-white"
                   : "bg-white/10 text-white/70 hover:text-white hover:bg-white/20"
               }`}
             >
@@ -150,9 +150,9 @@ export default function ContentTab({
             <button
               key={`dis-${genre.id}`}
               onClick={() => toggleGenre(genre.id, "disliked")}
-              className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+              className={`p-3 rounded-xl text-sm font-medium transition-colors duration-300 ${
                 preferences.dislikedGenres.includes(genre.id)
-                  ? "bg-gradient-to-r from-red-500 to-pink-600 text-white"
+                  ? "bg-red-600 text-white"
                   : "bg-white/10 text-white/70 hover:text-white hover:bg-white/20"
               }`}
             >

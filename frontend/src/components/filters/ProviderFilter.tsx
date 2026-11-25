@@ -33,7 +33,7 @@ export default function ProviderFilter({
             <button
               key={provider.id}
               onClick={() => onToggle(provider.id)}
-              className={`relative p-2 rounded-lg border-2 transition-all ${
+              className={`relative p-2 rounded-lg border-2 transition-colors ${
                 isSelected
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
                   : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"

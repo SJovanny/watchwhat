@@ -136,11 +136,11 @@ function SearchContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen pb-24 md:pb-16 pb-20 md:pb-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="font-display text-[44px] leading-[1.05] text-ink sm:text-[56px] mb-2">
             Résultats de recherche
           </h1>
           {query && (
@@ -240,7 +240,7 @@ function SearchContent() {
         {filteredResults.length > 0 && (
           <>
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 mb-8">
                 {filteredResults.map((result) => {
                   if (result.media_type === 'tv') {
                     return (
@@ -268,7 +268,7 @@ function SearchContent() {
                   <div
                     key={result.id}
                     onClick={() => handleResultSelect(result)}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 hover:shadow-xl transition-colors duration-300 cursor-pointer"
                   >
                     <div className="flex gap-4">
                       <img
@@ -368,7 +368,7 @@ export default function SearchPage() {
   return (
     <Suspense 
       fallback={
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8 pt-20 flex justify-center">
+        <div className="min-h-screen pb-24 md:pb-16 pb-20 md:pb-8 pt-20 flex justify-center">
            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       }

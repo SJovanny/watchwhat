@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Globe, TrendingUp, ChevronRight } from 'lucide-react';
 import { SearchResult } from '@/types';
 import { tmdbService } from '@/lib/tmdb';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import AllTrendingCarousel from './AllTrendingCarousel';
+import SectionHeader from './SectionHeader';
 
 // Map des noms de pays en français
 const COUNTRY_NAMES: Record<string, string> = {
@@ -88,56 +88,26 @@ export default function RegionalTrending({ onContentClick, className = '' }: Reg
   const countryCode = preferences?.country || 'FR';
   const countryName = COUNTRY_NAMES[countryCode] || countryCode;
 
-  if (isLoading) {
-    return (
-      <section className={`mb-12 ${className}`}>
-        <div className="flex items-center space-x-2 mb-6">
-          <Globe className="h-6 w-6 text-emerald-500 animate-pulse" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Populaire en {countryName}
-          </h2>
-        </div>
-        <div className="flex space-x-4 overflow-hidden">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="flex-shrink-0 w-48 h-72 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"
-            />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (content.length === 0) {
+  if (!isLoading && content.length === 0) {
     return null; // Ne pas afficher si pas de contenu
   }
 
   return (
-    <section className={`mb-12 ${className}`}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <Globe className="h-6 w-6 text-emerald-500" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Populaire en {countryName}
-          </h2>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            ({content.length} contenus)
-          </span>
-        </div>
-        <button
-          onClick={() => window.location.href = '/discover'}
-          className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 hover:underline text-sm"
-        >
-          <span>Explorer plus</span>
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      <AllTrendingCarousel
-        content={content}
-        onContentClick={onContentClick}
+    <section className={className} aria-labelledby="row-regional">
+      <SectionHeader
+        title={<span id="row-regional">Populaire en {countryName}</span>}
+        meta={isLoading ? undefined : `${content.length} titres`}
+        action={{ label: 'Explorer', href: '/discover' }}
       />
+      {isLoading ? (
+        <div className="flex gap-3 overflow-hidden sm:gap-4" aria-hidden>
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="skeleton aspect-[2/3] w-[140px] flex-shrink-0 sm:w-[160px] md:w-[176px] lg:w-[192px]" />
+          ))}
+        </div>
+      ) : (
+        <AllTrendingCarousel content={content} onContentClick={onContentClick} />
+      )}
     </section>
   );
 }

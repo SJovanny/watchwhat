@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Star, Calendar, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Movie, Serie, Person, SearchResult } from "@/types";
 import { getImageUrl } from "@/lib/tmdb";
 import SerieCard from "./SerieCard";
@@ -42,111 +42,39 @@ export default function ContentCard({
     );
   }
 
-  // Pour les personnes, garder l'affichage simple
-  const handleClick = () => {
-    onContentClick?.(content);
-  };
-
-  const getTitle = () => {
-    if (content.media_type === "person") {
-      return (content as Person).name;
-    }
-    return "Titre inconnu";
-  };
-
-  const getDate = () => {
-    return null;
-  };
-
-  const getRating = () => {
-    return null;
-  };
-
-  const getOverview = () => {
-    return null;
-  };
-
-  const getImagePath = () => {
-    if (content.media_type === "person") {
-      return (content as Person).profile_path;
-    }
-    return null;
-  };
-
-  const getMediaTypeBadge = () => {
-    const badges = {
-      movie: { label: "Film", color: "bg-blue-500" },
-      tv: { label: "Série", color: "bg-green-500" },
-      person: { label: "Personne", color: "bg-purple-500" },
-    };
-
-    // Note: Due to early return, only 'person' is expected here, 
-    // but we keep safey lookups in case of future changes.
-    const badge = badges[content.media_type] || badges['person'];
-    
-    return (
-      <span
-        className={`inline-block px-2 py-1 text-xs font-semibold text-white rounded-full ${badge.color}`}
-      >
-        {badge.label}
-      </span>
-    );
-  };
-  
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    return new Date(dateString).getFullYear().toString();
-  };
-
-  const title = getTitle();
-  const date = getDate();
-  const rating = getRating();
-  const overview = getOverview();
-  const imagePath = getImagePath();
+  // Personnes : portrait, nom, rôle
+  const person = content as Person;
+  const handleClick = () => onContentClick?.(content);
 
   return (
-    <div
-      className={`group relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer ${className}`}
+    <article
+      role="link"
+      tabIndex={0}
+      aria-label={person.name}
       onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") handleClick();
+      }}
+      className={`group cursor-pointer rounded-lg outline-offset-4 ${className}`}
     >
-      {/* Image */}
-      <div className="relative aspect-[2/3] rounded-t-lg overflow-hidden">
-        <img
-          src={getImageUrl(imagePath)}
-          alt={title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-        />
-
-        {/* Media type badge */}
-        <div className="absolute top-2 left-2">{getMediaTypeBadge()}</div>
-
-        {/* Rating badge pour films et séries */}
-
-      </div>
-
-      {/* Content info */}
-      <div className="p-4">
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2 line-clamp-2">
-          {title}
-        </h3>
-
-        {/* Date pour films et séries */}
-
-
-        {/* Profession pour les personnes */}
-        {content.media_type === "person" && (content as Person).character && (
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
-            <User size={14} className="mr-1" />
-            <span className="line-clamp-1">
-              {(content as Person).character}
-            </span>
+      <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-raised ring-1 ring-line transition-transform duration-300 ease-[var(--ease-cinema)] group-hover:-translate-y-0.5">
+        {person.profile_path ? (
+          <img
+            src={getImageUrl(person.profile_path)}
+            alt=""
+            className="h-full w-full object-cover grayscale-[35%] transition-[transform,filter] duration-500 ease-[var(--ease-cinema)] group-hover:scale-[1.03] group-hover:grayscale-0"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <User size={28} strokeWidth={1.5} className="text-ink-3" />
           </div>
         )}
-
-        {/* Overview pour films et séries */}
-
       </div>
-    </div>
+      <div className="px-0.5 pt-3">
+        <h3 className="line-clamp-1 text-[14px] font-medium leading-5 text-ink">{person.name}</h3>
+        <p className="meta mt-1 line-clamp-1 text-ink-3">{person.character || "Personnalité"}</p>
+      </div>
+    </article>
   );
 }

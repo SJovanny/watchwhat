@@ -4,51 +4,34 @@ import React from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ className = "" }: { className?: string }) {
   const { theme, toggleTheme, mounted } = useTheme();
+
+  const base =
+    "inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink-2 transition-colors duration-150 hover:bg-raised hover:text-ink active:scale-[0.97]";
 
   // Éviter le flash de contenu non stylé
   if (!mounted) {
     return (
-      <button
-        className="p-2 text-gray-600 dark:text-gray-400 rounded-lg"
-        disabled
-      >
-        <div className="w-5 h-5" />
+      <button className={`${base} ${className}`} disabled aria-label="Thème">
+        <span className="h-[18px] w-[18px]" />
       </button>
     );
   }
 
-  const getIcon = () => {
-    switch (theme) {
-      case "light":
-        return <Sun size={20} />;
-      case "dark":
-        return <Moon size={20} />;
-      case "system":
-        return <Monitor size={20} />;
-    }
-  };
+  const label =
+    theme === "light" ? "Mode clair" : theme === "dark" ? "Mode sombre" : "Thème système";
 
-  const getLabel = () => {
-    switch (theme) {
-      case "light":
-        return "Mode clair";
-      case "dark":
-        return "Mode sombre";
-      case "system":
-        return "Thème système";
-    }
-  };
+  const Icon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
 
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-      title={getLabel()}
-      aria-label={getLabel()}
+      className={`${base} ${className}`}
+      title={label}
+      aria-label={label}
     >
-      {getIcon()}
+      <Icon size={18} strokeWidth={1.5} />
     </button>
   );
 }

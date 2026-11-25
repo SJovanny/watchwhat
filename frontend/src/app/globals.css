@@ -1,29 +1,209 @@
 @import "tailwindcss";
 
-/* Tailwind v4: Configure dark mode to use .dark class */
+/* Tailwind v4: dark mode follows the .dark class set by ThemeProvider */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * WatchWhat — "salle obscure"
+ * One graphite ramp for every surface, one velvet-red accent,
+ * Instrument Serif for titles, Geist for the interface, Geist Mono for meta.
+ *
+ * The Tailwind palette is remapped here so every existing utility
+ * (bg-gray-*, text-blue-*, from-purple-*…) lands inside the system:
+ *  - gray            → graphite neutral ramp
+ *  - blue / indigo / violet / purple / fuchsia / pink → velvet accent
+ *  - yellow          → projector amber (ratings)
+ */
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --ease-cinema: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Graphite */
+  --color-gray-50: #f6f6f7;
+  --color-gray-100: #ededee;
+  --color-gray-200: #dedee0;
+  --color-gray-300: #c4c4c8;
+  --color-gray-400: #9d9da3;
+  --color-gray-500: #74747a;
+  --color-gray-600: #4a4a4f;
+  --color-gray-700: #2a2a2d;
+  --color-gray-800: #18181a;
+  --color-gray-900: #0d0d0e;
+  --color-gray-950: #070708;
+
+  --color-slate-800: #18181a;
+  --color-slate-900: #0d0d0e;
+  --color-zinc-800: #18181a;
+  --color-zinc-900: #0d0d0e;
+
+  /* Velvet — the one accent */
+  --color-velvet-50: #fdf3f2;
+  --color-velvet-100: #fbe2df;
+  --color-velvet-200: #f5c2bc;
+  --color-velvet-300: #ee998f;
+  --color-velvet-400: #e7705f;
+  --color-velvet-500: #dc4636;
+  --color-velvet-600: #c4302a;
+  --color-velvet-700: #a32621;
+  --color-velvet-800: #82211d;
+  --color-velvet-900: #5e1c19;
+  --color-velvet-950: #330c0a;
+
+  --color-blue-50: var(--color-velvet-50);
+  --color-blue-100: var(--color-velvet-100);
+  --color-blue-200: var(--color-velvet-200);
+  --color-blue-300: var(--color-velvet-300);
+  --color-blue-400: var(--color-velvet-400);
+  --color-blue-500: var(--color-velvet-500);
+  --color-blue-600: var(--color-velvet-600);
+  --color-blue-700: var(--color-velvet-700);
+  --color-blue-800: var(--color-velvet-800);
+  --color-blue-900: var(--color-velvet-900);
+  --color-blue-950: var(--color-velvet-950);
+
+  --color-indigo-50: var(--color-velvet-50);
+  --color-indigo-100: var(--color-velvet-100);
+  --color-indigo-400: var(--color-velvet-400);
+  --color-indigo-500: var(--color-velvet-500);
+  --color-indigo-600: var(--color-velvet-600);
+  --color-indigo-700: var(--color-velvet-700);
+  --color-indigo-900: var(--color-velvet-900);
+
+  --color-violet-400: var(--color-velvet-400);
+  --color-violet-500: var(--color-velvet-500);
+  --color-violet-600: var(--color-velvet-600);
+  --color-violet-900: var(--color-gray-800);
+
+  --color-purple-50: var(--color-velvet-50);
+  --color-purple-100: var(--color-velvet-100);
+  --color-purple-200: var(--color-velvet-200);
+  --color-purple-300: var(--color-velvet-300);
+  --color-purple-400: var(--color-velvet-400);
+  --color-purple-500: var(--color-velvet-500);
+  --color-purple-600: var(--color-velvet-600);
+  --color-purple-700: var(--color-velvet-700);
+  --color-purple-800: var(--color-velvet-800);
+  --color-purple-900: var(--color-velvet-900);
+
+  --color-fuchsia-400: var(--color-velvet-400);
+  --color-fuchsia-500: var(--color-velvet-500);
+  --color-fuchsia-900: var(--color-gray-800);
+
+  --color-pink-50: var(--color-velvet-50);
+  --color-pink-100: var(--color-velvet-100);
+  --color-pink-400: var(--color-velvet-400);
+  --color-pink-500: var(--color-velvet-500);
+  --color-pink-600: var(--color-velvet-600);
+  --color-pink-700: var(--color-velvet-700);
+  --color-pink-900: var(--color-velvet-900);
+
+  /* Projector amber for ratings */
+  --color-yellow-300: #f3d38a;
+  --color-yellow-400: #efc261;
+  --color-yellow-500: #e3a93b;
+  --color-yellow-600: #b9831f;
+
+  /* Semantic, toned to sit inside the ramp */
+  --color-green-400: #5fcf96;
+  --color-green-500: #3fb67c;
+  --color-green-600: #2f9a66;
+  --color-green-700: #257c52;
+}
+
+/* Semantic surface tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f6f6f7;
+  --surface: #ffffff;
+  --raised: #ededee;
+  --line: rgb(20 20 22 / 0.09);
+  --line-strong: rgb(20 20 22 / 0.16);
+  --ink: #141416;
+  --ink-2: #4a4a4f;
+  --ink-3: #6b6b71;
+  --accent: #c4302a;
+  --accent-ink: #a32621;
+  --on-accent: #ffffff;
+  color-scheme: light;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --canvas: #0d0d0e;
+  --surface: #141416;
+  --raised: #1e1e21;
+  --line: rgb(242 242 243 / 0.08);
+  --line-strong: rgb(242 242 243 / 0.14);
+  --ink: #f2f2f3;
+  --ink-2: #a8a8ae;
+  --ink-3: #808087;
+  --accent: #dc4636;
+  --accent-ink: #ee998f;
+  --on-accent: #ffffff;
+  color-scheme: dark;
 }
 
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+}
+
+html {
+  background: var(--canvas);
+}
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Animations personnalisées pour les notifications */
+::selection {
+  background: color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes slide-in-right {
   from {
-    transform: translateX(100%);
+    transform: translateX(16px);
     opacity: 0;
   }
   to {
@@ -32,240 +212,102 @@ body {
   }
 }
 
-@keyframes fade-in {
+@keyframes progress {
   from {
-    opacity: 0;
-    transform: scale(0.95);
+    transform: scaleX(0);
   }
   to {
-    opacity: 1;
-    transform: scale(1);
+    transform: scaleX(1);
   }
 }
 
-.animate-in {
-  animation: slide-in-right 0.3s ease-out;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
-}
-
-/* Styles personnalisés pour la section trailers */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
-}
-
-/* Animation douce pour les changements d'arrière-plan */
-.bg-transition {
-  transition: background-image 1s ease-in-out;
-}
-
-/* Amélioration de la lisibilité avec text-shadow */
-.text-shadow {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-/* Effet de survol pour les cartes de trailers */
-.trailer-card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.dark .trailer-card {
-  background: rgba(31, 41, 55, 0.95);
-}
-
-/* Animations ultra stylées pour les trailers */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
+@layer components {
+  /* Display type — titles only */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
-  50% {
-    transform: translateY(-20px) scale(1.05);
-  }
-}
 
-@keyframes float-delayed {
-  0%, 100% {
-    transform: translateY(0px) scale(1) rotate(0deg);
+  /* Mono meta line: 2024 · 2 h 14 · 7,8 */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
   }
-  50% {
-    transform: translateY(-30px) scale(1.1) rotate(3deg);
-  }
-}
 
-@keyframes float-slow {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px);
+  /* Horizontal rows */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  33% {
-    transform: translateY(-15px) translateX(10px);
-  }
-  66% {
-    transform: translateY(-10px) translateX(-10px);
-  }
-}
 
-@keyframes glow-pulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5), 0 0 40px rgba(147, 51, 234, 0.3);
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
-  50% {
-    box-shadow: 0 0 30px rgba(147, 51, 234, 0.8), 0 0 60px rgba(147, 51, 234, 0.5);
-  }
-}
 
-@keyframes neon-border {
-  0%, 100% {
-    border-color: rgba(59, 130, 246, 0.5);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  .row-scroller {
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--row-pad, 0px);
+    overscroll-behavior-x: contain;
   }
-  50% {
-    border-color: rgba(147, 51, 234, 0.8);
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.6), 0 0 30px rgba(147, 51, 234, 0.4);
+
+  .row-scroller > * > * {
+    scroll-snap-align: start;
+  }
+
+  /* Bottom scrim used over photography — a neutral fade, not a hue gradient */
+  .scrim-bottom {
+    background: linear-gradient(
+      to top,
+      var(--canvas) 0%,
+      color-mix(in oklab, var(--canvas) 70%, transparent) 28%,
+      transparent 62%
+    );
+  }
+
+  .scrim-left {
+    background: linear-gradient(
+      to right,
+      rgb(0 0 0 / 0.78) 0%,
+      rgb(0 0 0 / 0.45) 38%,
+      transparent 70%
+    );
+  }
+
+  /* Entrances — one on load per page, short fade and rise */
+  .animate-rise {
+    animation: rise-in 480ms var(--ease-cinema) both;
+  }
+
+  .animate-fade {
+    animation: fade-in 600ms var(--ease-cinema) both;
+  }
+
+  .animate-in {
+    animation: slide-in-right 280ms var(--ease-cinema) both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 200ms var(--ease-cinema) both;
+  }
+
+  /* Calm skeletons: a steady surface, no shimmer */
+  .skeleton {
+    background: var(--raised);
+    border-radius: 8px;
   }
 }
 
-@keyframes slide-up-fade {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Classes d'animation */
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-  animation: float-delayed 8s ease-in-out infinite;
-  animation-delay: -2s;
-}
-
-.animate-float-slow {
-  animation: float-slow 10s ease-in-out infinite;
-  animation-delay: -4s;
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-
-.animate-neon-border {
-  animation: neon-border 2s ease-in-out infinite;
-}
-
-.animate-slide-up-fade {
-  animation: slide-up-fade 0.6s ease-out;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-/* Effets de survol ultra premium */
-.premium-hover {
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.premium-hover:hover {
-  transform: translateY(-8px) scale(1.02);
-  filter: brightness(1.1) saturate(1.2);
-}
-
-/* Glassmorphism avancé */
-.glass-ultra {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.glass-dark {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(15px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Effet text gradient animé */
-.text-gradient-animate {
-  background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe);
-  background-size: 600% 600%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-shift 3s ease infinite;
-}
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Effets de particules pour les arrière-plans */
-.particles::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.2), transparent),
-    radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.3), transparent);
-  background-repeat: repeat;
-  background-size: 200px 100px;
-  animation: particles-float 20s linear infinite;
-}
-
-@keyframes particles-float {
-  from { transform: translateY(0px); }
-  to { transform: translateY(-200px); }
-}
-
-/* Utilités pour les barres de progression stylées */
-.progress-glow {
-  position: relative;
-  overflow: hidden;
-}
-
-.progress-glow::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  animation: progress-shine 2s infinite;
-}
-
-@keyframes progress-shine {
-  0% { left: -100%; }
-  100% { left: 100%; }
 }

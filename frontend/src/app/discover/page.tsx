@@ -134,16 +134,13 @@ export default function DiscoverPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen pb-24 md:pb-16 pb-20 md:pb-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
-              <Tv className="h-8 w-8 text-white" />
-            </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="font-display text-[44px] leading-[1.05] text-ink sm:text-[56px]">
                 Découvrir des séries
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
@@ -173,7 +170,7 @@ export default function DiscoverPage() {
 
         {/* Grille de séries */}
         {filteredSeries.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 mb-8">
             {filteredSeries.map((serie) => (
               <SerieCard
                 key={serie.id}
@@ -230,16 +227,16 @@ export default function DiscoverPage() {
 
         {/* État de chargement */}
         {isLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {[...Array(18)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md animate-pulse"
+                className=""
               >
-                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700"></div>
+                <div className="skeleton aspect-[2/3]"></div>
                 <div className="p-3 space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                  <div className="skeleton h-4"></div>
+                  <div className="skeleton h-3 w-2/3"></div>
                 </div>
               </div>
             ))}

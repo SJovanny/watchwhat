@@ -26,7 +26,7 @@ export default function GenreFilter({
           <button
             key={genre.id}
             onClick={() => onToggle(genre.id)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               isSelected
                 ? "bg-blue-500 text-white"
                 : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"

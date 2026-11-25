@@ -27,7 +27,7 @@ export default function AccountTab({ account, onLogout }: AccountTabProps) {
   if (!account) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
           <User className="h-10 w-10 text-white" />
         </div>
         <h4 className="text-white text-xl font-bold mb-2">Non connecté</h4>
@@ -36,7 +36,7 @@ export default function AccountTab({ account, onLogout }: AccountTabProps) {
         </p>
         <button
           onClick={handleLogin}
-          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
+          className="px-6 py-3 bg-accent text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
         >
           Se connecter avec TMDB
         </button>
@@ -49,7 +49,7 @@ export default function AccountTab({ account, onLogout }: AccountTabProps) {
       {/* Informations du compte */}
       <div className="p-6 bg-white/5 rounded-xl border border-white/10">
         <div className="flex items-center space-x-4 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
             <User className="h-8 w-8 text-white" />
           </div>
           <div>
@@ -91,7 +91,7 @@ export default function AccountTab({ account, onLogout }: AccountTabProps) {
 
         <button
           onClick={onLogout}
-          className="flex items-center space-x-3 w-full p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 transition-all duration-300"
+          className="flex items-center space-x-3 w-full p-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 transition-colors duration-300"
         >
           <LogOut className="h-5 w-5" />
           <span className="font-medium">Se déconnecter</span>

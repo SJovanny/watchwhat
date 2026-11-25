@@ -58,13 +58,13 @@ function CallbackContent() {
   }, [router, searchParams])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
       <div className="max-w-md w-full">
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-8 text-center">
+        <div className="bg-white/5 rounded-2xl border border-white/10 p-8 text-center">
           
           {status === 'loading' && (
             <>
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
                 <Loader2 className="h-10 w-10 text-white animate-spin" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-4">
@@ -78,7 +78,7 @@ function CallbackContent() {
 
           {status === 'success' && (
             <>
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Check className="h-10 w-10 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-4">
@@ -93,7 +93,7 @@ function CallbackContent() {
 
           {status === 'error' && (
             <>
-              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertCircle className="h-10 w-10 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-4">
@@ -118,8 +118,8 @@ export default function AuthCallback() {
   return (
     <Suspense 
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-6">
-           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
+           <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
                 <Loader2 className="h-10 w-10 text-white animate-spin" />
           </div>
         </div>

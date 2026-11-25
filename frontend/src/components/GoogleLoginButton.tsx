@@ -48,7 +48,7 @@ export default function GoogleLoginButton() {
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading}
-        className="w-full flex items-center justify-center space-x-3 p-4 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 font-semibold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+        className="w-full flex items-center justify-center space-x-3 p-4 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 font-semibold text-lg transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
       >
         {isLoading ? (
           <>

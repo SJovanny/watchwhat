@@ -48,10 +48,10 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <div className="relative mb-6">
-            <div className="p-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-2xl">
+            <div className="p-4 bg-accent rounded-2xl">
               <Settings className="h-10 w-10 text-white animate-spin" />
             </div>
           </div>
@@ -63,10 +63,10 @@ export default function SettingsPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
-        <div className="text-center p-8 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 max-w-md">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center p-8 bg-white/5 rounded-2xl border border-white/10 max-w-md">
           <div className="relative mb-6 mx-auto w-fit">
-            <div className="p-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl">
+            <div className="p-4 bg-red-600 rounded-2xl">
               <Lock className="h-10 w-10 text-white" />
             </div>
           </div>
@@ -76,7 +76,7 @@ export default function SettingsPage() {
           </p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+            className="px-6 py-3 bg-accent text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
           >
             Retour à l'accueil
           </button>

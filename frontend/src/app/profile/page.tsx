@@ -123,11 +123,11 @@ export default function ProfilePage() {
   // Affichage si non connecté
   if (!authLoading && !user) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
+      <div className="min-h-screen pb-24 md:pb-16 pb-20 md:pb-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-20">
             <User className="h-20 w-20 text-gray-400 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 className="font-display text-[44px] leading-[1.05] text-ink sm:text-[56px] mb-4">
               Mon Profil
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
@@ -149,14 +149,14 @@ export default function ProfilePage() {
   // Affichage du chargement
   if (isLoading || authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen pb-24 md:pb-16 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-8">
+    <div className="min-h-screen pb-24 md:pb-16 pb-20 md:pb-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -173,7 +173,7 @@ export default function ProfilePage() {
               </div>
             )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="font-display text-[44px] leading-[1.05] text-ink sm:text-[56px]">
                 {user?.firstName ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}` : user?.email?.split("@")[0]}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>

@@ -286,9 +286,9 @@ export default function UnifiedFilterBar({
       {/* Bouton de filtre */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl border transition-all duration-200 ${
+        className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl border transition-colors duration-200 ${
           activeFiltersCount > 0
-            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-transparent shadow-lg shadow-blue-500/25'
+            ? 'bg-accent text-white border-transparent'
             : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
         }`}
       >
@@ -310,7 +310,7 @@ export default function UnifiedFilterBar({
         <>
           <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
           
-          <div className="absolute z-40 top-full mt-2 left-0 w-96 max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl">
+          <div className="absolute z-40 top-full mt-2 left-0 w-96 max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl">
             {/* Header */}
             <div className="sticky top-0 bg-white dark:bg-gray-800 z-10 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="font-bold text-gray-900 dark:text-white text-lg">
@@ -381,7 +381,7 @@ export default function UnifiedFilterBar({
                       <button
                         key={option.value}
                         onClick={() => handleMonetizationToggle(option.value)}
-                        className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                        className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                           isSelected
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -453,7 +453,7 @@ export default function UnifiedFilterBar({
                     <button
                       key={cert.value}
                       onClick={() => setFilters(prev => ({ ...prev, certification: cert.value }))}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                         filters.certification === cert.value
                           ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -566,7 +566,7 @@ export default function UnifiedFilterBar({
             <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200"
+                className="w-full py-2.5 bg-accent text-white font-semibold rounded-xl hover:shadow-lg transition-colors duration-200"
               >
                 Appliquer les filtres
               </button>
