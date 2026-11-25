@@ -139,9 +139,10 @@ export default function HeroSection() {
           }`}
         >
           <Image
-            src={getBackdropUrl(m.backdrop_path, "original")}
+            src={getBackdropUrl(m.backdrop_path, "w1280")}
             alt=""
             fill
+            unoptimized
             priority={i === 0}
             loading={i === 0 ? undefined : "lazy"}
             sizes="100vw"

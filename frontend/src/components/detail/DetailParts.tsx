@@ -41,9 +41,10 @@ export function DetailHero({
     <header className="relative -mt-16 min-h-[640px] overflow-hidden bg-gray-950 text-white lg:min-h-[min(88svh,860px)]">
       {backdropPath && (
         <Image
-          src={getBackdropUrl(backdropPath, "original")}
+          src={getBackdropUrl(backdropPath, "w1280")}
           alt=""
           fill
+          unoptimized
           priority
           sizes="100vw"
           className="animate-fade object-cover object-[center_25%]"
