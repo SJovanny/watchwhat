@@ -190,8 +190,12 @@ export const tmdbV4Service = {
           }
         };
         
-        // Sauvegarder les préférences par défaut
-        this.saveUserPreferences(defaultPreferences);
+        // Sauvegarder les préférences par défaut directement :
+        // passer par saveUserPreferences rappellerait getUserPreferences en boucle
+        localStorage.setItem(
+          'user_preferences',
+          JSON.stringify({ ...defaultPreferences, updatedAt: new Date() })
+        );
         return defaultPreferences;
       }
       
