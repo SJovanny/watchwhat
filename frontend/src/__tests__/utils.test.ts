@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDateToYear, formatRating, getRatingColor, formatDuration, truncateText } from '@/lib/utils'
+import { formatDateToYear, formatRating, getRatingColor, formatDuration, truncateText, getNameFromMetadata } from '@/lib/utils'
 
 describe('Utils', () => {
   describe('formatDateToYear', () => {
@@ -93,6 +93,39 @@ describe('Utils', () => {
 
     it('should return empty for null', () => {
       expect(truncateText(null, 10)).toBe('')
+    })
+  })
+
+  describe('getNameFromMetadata', () => {
+    it('prefers the full name sent by Google over stale given/family names', () => {
+      expect(
+        getNameFromMetadata({ given_name: 'giovanny', family_name: 'smon', name: 'Jovanny Simon' })
+      ).toEqual({ firstName: 'Jovanny', lastName: 'Simon' })
+    })
+
+    it('uses full_name before name', () => {
+      expect(getNameFromMetadata({ full_name: 'Jean Pierre Dupont', name: 'JP' })).toEqual({
+        firstName: 'Jean',
+        lastName: 'Pierre Dupont',
+      })
+    })
+
+    it('falls back to family_name when the full name is a single word', () => {
+      expect(getNameFromMetadata({ name: 'Jovanny', family_name: 'Simon' })).toEqual({
+        firstName: 'Jovanny',
+        lastName: 'Simon',
+      })
+    })
+
+    it('falls back to given/family names when no full name exists', () => {
+      expect(getNameFromMetadata({ given_name: 'Ana', family_name: 'Lopez', name: '' })).toEqual({
+        firstName: 'Ana',
+        lastName: 'Lopez',
+      })
+    })
+
+    it('returns nothing for missing metadata', () => {
+      expect(getNameFromMetadata(undefined)).toEqual({ firstName: undefined, lastName: undefined })
     })
   })
 })

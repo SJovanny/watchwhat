@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { UserService, UserData } from "@/lib/user-service";
 import { useHydration } from "@/hooks/useHydration";
+import { getNameFromMetadata } from "@/lib/utils";
 
 interface AuthContextType {
   user: UserData | null;
@@ -58,12 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData = await UserService.getCurrentUser();
 
         // Si les données de l'utilisateur ne sont pas à jour, les mettre à jour
-        const firstName =
-          authUser.user_metadata?.given_name ||
-          authUser.user_metadata?.name?.split(" ")[0];
-        const lastName =
-          authUser.user_metadata?.family_name ||
-          authUser.user_metadata?.name?.split(" ")[1];
+        const { firstName, lastName } = getNameFromMetadata(authUser.user_metadata);
 
         if (
           userData &&

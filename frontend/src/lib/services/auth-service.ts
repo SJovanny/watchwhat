@@ -3,6 +3,7 @@
  * Principe SRP : Ce service ne gère que l'authentification
  */
 import { supabase } from "../supabase";
+import { getNameFromMetadata } from "../utils";
 
 export interface UserData {
   id: string;
@@ -33,14 +34,8 @@ export class AuthService {
         userData || {
           id: user.id,
           email: user.email!,
-          firstName:
-            user.user_metadata?.given_name ||
-            user.user_metadata?.name?.split(" ")[0] ||
-            null,
-          lastName:
-            user.user_metadata?.family_name ||
-            user.user_metadata?.name?.split(" ")[1] ||
-            null,
+          firstName: getNameFromMetadata(user.user_metadata).firstName || null,
+          lastName: getNameFromMetadata(user.user_metadata).lastName || null,
           avatar: user.user_metadata?.avatar_url || null,
         }
       );
@@ -131,12 +126,7 @@ export class AuthService {
         await this.upsertUserProfile({
           id: user.id,
           email: user.email!,
-          firstName:
-            user.user_metadata?.given_name ||
-            user.user_metadata?.name?.split(" ")[0],
-          lastName:
-            user.user_metadata?.family_name ||
-            user.user_metadata?.name?.split(" ")[1],
+          ...getNameFromMetadata(user.user_metadata),
           avatar: user.user_metadata?.avatar_url,
         });
       }

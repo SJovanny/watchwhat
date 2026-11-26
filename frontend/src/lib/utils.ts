@@ -126,3 +126,31 @@ export const getImageWithFallback = (imagePath: string | null, baseUrl: string =
   
   return `${baseUrl}${imagePath}`;
 };
+
+/**
+ * Extrait prénom et nom des métadonnées Supabase d'un utilisateur.
+ *
+ * Le nom complet (`full_name` / `name`) passe en premier : c'est lui que
+ * Google renvoie et met à jour à chaque connexion. `given_name` /
+ * `family_name` ne sont écrits qu'à l'inscription par email et peuvent
+ * rester périmés quand Google est rattaché au même compte.
+ */
+export const getNameFromMetadata = (
+  metadata: Record<string, unknown> | null | undefined
+): { firstName?: string; lastName?: string } => {
+  const read = (key: string) => {
+    const value = metadata?.[key];
+    return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  };
+
+  const fullName = read('full_name') || read('name');
+  if (fullName) {
+    const [first, ...rest] = fullName.split(/\s+/);
+    return {
+      firstName: first,
+      lastName: rest.length > 0 ? rest.join(' ') : read('family_name'),
+    };
+  }
+
+  return { firstName: read('given_name'), lastName: read('family_name') };
+};
