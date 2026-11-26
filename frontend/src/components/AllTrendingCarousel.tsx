@@ -101,3 +101,18 @@ export default function AllTrendingCarousel({
     </div>
   );
 }
+
+/** Rangée d'affiches en attente de chargement, aux mêmes dimensions que le carrousel */
+export function CarouselSkeleton() {
+  return (
+    <div className="flex gap-3 overflow-hidden sm:gap-4" aria-hidden>
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="w-[140px] flex-shrink-0 sm:w-[160px] md:w-[176px] lg:w-[192px]">
+          <div className="skeleton aspect-[2/3]" />
+          <div className="skeleton mt-3 h-4 w-3/4" />
+          <div className="skeleton mt-2 h-3 w-1/2" />
+        </div>
+      ))}
+    </div>
+  );
+}

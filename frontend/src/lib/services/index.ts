@@ -17,3 +17,7 @@ export {
 export { RatingsService, type Rating } from "./ratings-service";
 export { PreferencesService } from "./preferences-service";
 export { StatsService, type UserStats } from "./stats-service";
+export {
+  RecommendationsService,
+  type PersonalRecommendations,
+} from "./recommendations-service";

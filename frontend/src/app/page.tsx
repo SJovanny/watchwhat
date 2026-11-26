@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import SectionHeader, { Segmented } from "@/components/SectionHeader";
-import AllTrendingCarousel from "@/components/AllTrendingCarousel";
+import AllTrendingCarousel, { CarouselSkeleton } from "@/components/AllTrendingCarousel";
+import ForYouRow from "@/components/ForYouRow";
 import PopularTrailers from "@/components/PopularTrailers";
 import PopularMovies from "@/components/PopularMovies";
 import RegionalTrending from "@/components/RegionalTrending";
@@ -153,6 +154,9 @@ export default function Home() {
       <HeroSection />
 
       <div className={`${container} relative space-y-14 pt-6 sm:space-y-16`}>
+        {/* Suggestions personnelles, en tête pour un utilisateur connecté */}
+        <ForYouRow onContentClick={handleContentSelect} />
+
         {/* Tendances */}
         <section aria-labelledby="row-trending">
           <SectionHeader
@@ -172,7 +176,7 @@ export default function Home() {
           </SectionHeader>
 
           {isLoading ? (
-            <RowSkeleton />
+            <CarouselSkeleton />
           ) : (
             <AllTrendingCarousel content={trendingContent} onContentClick={handleContentSelect} />
           )}
@@ -237,20 +241,6 @@ export default function Home() {
           </section>
         )}
       </div>
-    </div>
-  );
-}
-
-function RowSkeleton() {
-  return (
-    <div className="flex gap-3 overflow-hidden sm:gap-4" aria-hidden>
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="w-[140px] flex-shrink-0 sm:w-[160px] md:w-[176px] lg:w-[192px]">
-          <div className="skeleton aspect-[2/3]" />
-          <div className="skeleton mt-3 h-4 w-3/4" />
-          <div className="skeleton mt-2 h-3 w-1/2" />
-        </div>
-      ))}
     </div>
   );
 }

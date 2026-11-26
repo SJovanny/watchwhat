@@ -517,6 +517,17 @@ export const tmdbService = {
     return response.data;
   },
 
+  // Obtenir les recommandations basées sur un film
+  async getMovieRecommendations(
+    movieId: number,
+    page: number = 1
+  ): Promise<TMDBMovieResponse> {
+    const response = await tmdbApi.get(`/movie/${movieId}/recommendations`, {
+      params: { page },
+    });
+    return response.data;
+  },
+
   // ===== NOUVEAUX ENDPOINTS POUR LES FILTRES =====
 
   // Obtenir les services de streaming disponibles
