@@ -50,14 +50,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
 
-        // Si l'utilisateur se connecte, créer son profil dans la DB si nécessaire
+        // Si l'utilisateur se connecte, créer son profil dans la DB si nécessaire.
+        // Hors du callback : il tient le verrou d'auth de supabase-js (deadlock).
         if (event === 'SIGNED_IN' && session?.user) {
-          await ensureUserExists(session.user);
+          const signedInUser = session.user;
+          setTimeout(() => {
+            void ensureUserExists(signedInUser);
+          }, 0);
         }
       }
     );

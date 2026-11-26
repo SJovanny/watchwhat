@@ -5,6 +5,7 @@ import { UserPreferences } from "@/types";
 import { UserService } from "@/lib/user-service";
 import { tmdbService } from "@/lib/tmdb";
 import { supabase } from "@/lib/supabase";
+import { getSessionUser } from "@/lib/services/session";
 
 interface PreferencesContextType {
   preferences: UserPreferences | null;
@@ -53,7 +54,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       setIsLoading(true);
       
       // Vérifier si l'utilisateur est connecté
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       setIsAuthenticated(!!user);
       
       let prefs: UserPreferences | null = null;
@@ -102,10 +103,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     loadPreferences();
 
     // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Pas d'await d'appel Supabase dans ce callback : il tient le verrou
+    // d'authentification de supabase-js (deadlock). On recharge juste après.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       console.log('[PreferencesContext] Auth state changed:', event);
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        await loadPreferences();
+        setTimeout(() => {
+          void loadPreferences();
+        }, 0);
       }
     });
 

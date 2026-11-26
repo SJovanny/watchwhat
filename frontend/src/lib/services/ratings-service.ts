@@ -3,6 +3,7 @@
  * Principe SRP : Ce service ne gère que les ratings
  */
 import { supabase } from "../supabase";
+import { getSessionUser } from "./session";
 
 export interface Rating {
   id: string;
@@ -23,9 +24,7 @@ export class RatingsService {
     review?: string
   ): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase.from("ratings").upsert({
@@ -49,9 +48,7 @@ export class RatingsService {
    */
   static async getUserRating(serieId: number): Promise<Rating | null> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return null;
 
       const { data, error } = await supabase
@@ -84,9 +81,7 @@ export class RatingsService {
    */
   static async getUserRatings(): Promise<Rating[]> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return [];
 
       const { data, error } = await supabase

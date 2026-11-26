@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import { UserService, UserData } from "@/lib/user-service";
 import { useHydration } from "@/hooks/useHydration";
 import { getNameFromMetadata } from "@/lib/utils";
@@ -33,25 +34,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Attendre que l'hydratation soit terminée avant de charger l'utilisateur
     if (!isHydrated) return;
 
+    let cancelled = false;
+
     // Charger l'utilisateur initial
     const loadUser = async () => {
       try {
         const currentUser = await UserService.getCurrentUser();
-        setUser(currentUser);
+        if (!cancelled) setUser(currentUser);
       } catch (error) {
         console.error("Erreur lors du chargement de l'utilisateur:", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    loadUser();
+    // Synchroniser le profil après un changement de session
+    const handleAuthUser = async (authUser: User | null) => {
+      try {
+        if (!authUser) {
+          if (!cancelled) setUser(null);
+          return;
+        }
 
-    // Écouter les changements d'authentification
-    const {
-      data: { subscription },
-    } = UserService.onAuthStateChange(async (authUser) => {
-      if (authUser) {
         // Synchroniser l'utilisateur dans public.users si nécessaire (important pour Google OAuth)
         await UserService.syncUserAfterLogin(authUser.id);
 
@@ -69,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ) {
           await UserService.upsertUserProfile({
             id: authUser.id,
-            email: authUser.email,
+            email: authUser.email ?? userData.email,
             firstName,
             lastName,
             avatar: authUser.user_metadata?.avatar_url,
@@ -77,17 +81,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Recharger après mise à jour
           const updatedUser = await UserService.getCurrentUser();
-          setUser(updatedUser);
-        } else {
+          if (!cancelled) setUser(updatedUser);
+        } else if (!cancelled) {
           setUser(userData);
         }
-      } else {
-        setUser(null);
+      } catch (error) {
+        console.error("Erreur lors de la synchronisation de l'utilisateur:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
+    };
+
+    loadUser();
+
+    // Écouter les changements d'authentification.
+    // Ne jamais attendre (await) un appel Supabase dans ce callback : supabase-js
+    // l'exécute en tenant son verrou d'authentification, donc tout getUser(),
+    // getSession() ou requête lancé ici attendrait ce verrou indéfiniment
+    // (page qui charge sans fin, nom qui disparaît au rechargement).
+    // On sort donc le travail du callback avec setTimeout.
+    const {
+      data: { subscription },
+    } = UserService.onAuthStateChange((authUser) => {
+      setTimeout(() => {
+        void handleAuthUser(authUser);
+      }, 0);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [isHydrated]);
 
   const signIn = async () => {

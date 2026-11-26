@@ -3,6 +3,7 @@
  * Principe SRP : Ce service ne gère que les watchlists
  */
 import { supabase } from "../supabase";
+import { getSessionUser } from "./session";
 import { Serie, Movie } from "@/types";
 
 export interface WatchlistItem {
@@ -29,9 +30,7 @@ export class WatchlistService {
    */
   static async addSerie(serie: Serie): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase.from("watchlist_items").insert({
@@ -54,9 +53,7 @@ export class WatchlistService {
    */
   static async removeSerie(serieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase
@@ -78,9 +75,7 @@ export class WatchlistService {
    */
   static async getSeries(): Promise<WatchlistItem[]> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return [];
 
       const { data, error } = await supabase
@@ -110,9 +105,7 @@ export class WatchlistService {
    */
   static async isSerieInWatchlist(serieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { data, error } = await supabase
@@ -137,9 +130,7 @@ export class WatchlistService {
    */
   static async addMovie(movie: Movie): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase.from("watchlist_movies").insert({
@@ -162,9 +153,7 @@ export class WatchlistService {
    */
   static async removeMovie(movieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase
@@ -189,9 +178,7 @@ export class WatchlistService {
    */
   static async getMovies(): Promise<MovieWatchlistItem[]> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return [];
 
       const { data, error } = await supabase
@@ -224,9 +211,7 @@ export class WatchlistService {
    */
   static async isMovieInWatchlist(movieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { data, error } = await supabase
@@ -254,9 +239,7 @@ export class WatchlistService {
    */
   static async clearAll(): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       await supabase

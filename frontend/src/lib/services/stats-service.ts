@@ -3,6 +3,7 @@
  * Principe SRP : Ce service ne gère que les statistiques
  */
 import { supabase } from "../supabase";
+import { getSessionUser } from "./session";
 
 export interface UserStats {
   watchlistCount: number;
@@ -17,9 +18,7 @@ export class StatsService {
    */
   static async getUserStats(): Promise<UserStats | null> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return null;
 
       const [

@@ -3,6 +3,7 @@
  * Principe SRP : Ce service ne gère que l'historique des vues
  */
 import { supabase } from "../supabase";
+import { getSessionUser } from "./session";
 import { Serie, Movie } from "@/types";
 
 export interface WatchedSerie {
@@ -35,9 +36,7 @@ export class WatchHistoryService {
     episodeNumbers?: number[]
   ): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { data: existing } = await supabase
@@ -101,9 +100,7 @@ export class WatchHistoryService {
    */
   static async getWatchedSeries(): Promise<WatchedSerie[]> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return [];
 
       const { data, error } = await supabase
@@ -135,9 +132,7 @@ export class WatchHistoryService {
    */
   static async isSerieWatched(serieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { data, error } = await supabase
@@ -160,9 +155,7 @@ export class WatchHistoryService {
    */
   static async removeWatchedSerie(serieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase
@@ -186,9 +179,7 @@ export class WatchHistoryService {
    */
   static async markMovieAsWatched(movie: Movie): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase.from("watched_movies").insert({
@@ -224,9 +215,7 @@ export class WatchHistoryService {
    */
   static async getWatchedMovies(): Promise<WatchedMovie[]> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return [];
 
       const { data, error } = await supabase
@@ -256,9 +245,7 @@ export class WatchHistoryService {
    */
   static async isMovieWatched(movieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { data, error } = await supabase
@@ -281,9 +268,7 @@ export class WatchHistoryService {
    */
   static async removeWatchedMovie(movieId: number): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase
@@ -307,9 +292,7 @@ export class WatchHistoryService {
    */
   static async clearSeriesHistory(): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const { error } = await supabase
@@ -330,9 +313,7 @@ export class WatchHistoryService {
    */
   static async clearAllHistory(): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       await supabase

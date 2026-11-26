@@ -3,6 +3,7 @@
  * Principe SRP : Ce service ne gère que les préférences
  */
 import { supabase } from "../supabase";
+import { getSessionUser } from "./session";
 import { UserPreferences } from "@/types";
 
 export class PreferencesService {
@@ -13,9 +14,7 @@ export class PreferencesService {
     preferences: Partial<UserPreferences>
   ): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return false;
 
       const updateData: any = {
@@ -75,9 +74,7 @@ export class PreferencesService {
    */
   static async getPreferences(): Promise<UserPreferences | null> {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser();
       if (!user) return null;
 
       const { data, error } = await supabase
